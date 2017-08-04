@@ -1,0 +1,15 @@
+{
+  "name": "config_maker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "config_maker.js",
+  "dependencies": {
+    "mustache": "^2.3.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "yak_ex@mx.scn.tv",
+  "license": "Zlib"
+}
