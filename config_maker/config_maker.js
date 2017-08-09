@@ -10,6 +10,7 @@ const Counter = class {
   incr () { let s = (this.value++).toString(); return this._pad(s) }
   set () { return (text, render) => { this.value = parseInt(text) } }
   _pad (s) { return s.length < this.minimum ? this.pad.repeat(this.minimum - s.length)+s : s; }
+  [Symbol.toPrimitive](hint) { if (hint === 'number') { return this.value++ } else { return this.incr() } }
 }
 
 let make_counter = (init, minimum, pad) => new Proxy(new Counter(init, minimum, pad), {
@@ -45,8 +46,9 @@ let context = {
 //))
 
 console.log(Mustache.render(
-`Test{{counter.incr}}
+`Test{{counter}}
 Test{{counter.incr}}
+Test{{counter}}
 Test{{counter.keep}}
 Test{{counter.incr}}
 {{#counter.set}}3{{/counter.set}}Test{{counter.incr}}
