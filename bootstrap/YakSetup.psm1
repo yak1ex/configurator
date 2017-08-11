@@ -1,5 +1,43 @@
 # YakSetup.psm1
 
+function Select-Menu {
+  <#
+   .Synopsis
+    Show CUI menu.
+
+   .Description
+    Show CUI menu.
+
+   .Parameter Title
+    Menu title
+
+   .Parameter Message
+    Message for menu
+
+   .Parameter Options
+    Array of 2-element Array of String. The 1st element is label and the 2nd element is help message.
+
+   .Parameter Default
+    Default selection. 0-based index of options. If omitted, 0 is used.
+
+   .Outputs
+    Intger. 0-based index of options.
+
+   .Example
+    Select-Menu "Confirm" "Delete these files?" @(@("&Yes", "Delete files"), @("&No", "Retain files"))
+    Show menu for delete confirmation.
+  #>
+  param(
+    [parameter(Mandatory=$true)][string] $title,
+    [parameter(Mandatory=$true)][string] $message,
+    [parameter(Mandatory=$true)][Object[]] $options,
+    [parameter(Mandatory=$false)][Int] $default=0
+  )
+
+  $choice=[System.Management.Automation.Host.ChoiceDescription[]]($options | % { New-Object System.Management.Automation.Host.ChoiceDescription $_ })
+  return $host.ui.PromptForChoice($title, $message, $choice, $default)
+}
+
 function Invoke-Bootstrap {
   <#
    .Synopsis
@@ -370,4 +408,4 @@ function Cho {
   }
 }
 
-Export-ModuleMember -function Invoke-Bootstrap, Request-Head, Get-ArchivePath, Install-Archive, Add-PathEnv, Test-64BitEnv, Test-64BitProcess, Test-Admin, Get-ProgramFiles, Get-ConfigPlace, Expand-Bits, Cho
+Export-ModuleMember -function Select-Menu, Invoke-Bootstrap, Request-Head, Get-ArchivePath, Install-Archive, Add-PathEnv, Test-64BitEnv, Test-64BitProcess, Test-Admin, Get-ProgramFiles, Get-ConfigPlace, Expand-Bits, Cho
