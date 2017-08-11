@@ -1,7 +1,0 @@
-{
-  "name": "node-bootstrap",
-  "version": "0.1.0",
-  "description": "Bootstrap Node environment on Windows",
-  "bin": { "node-bootstrap": "./node-bootstrap.js" },
-  "private": true
-}
