@@ -62,7 +62,7 @@ function main {
   $modpath=(${env:PSModulePath}.split(';') | ? {$_ -match 'Users' })
   $modname='YakSetup'
   If(!(Test-Path $modpath/$modname)) { mkdir $modpath/$modname }
-  Echo $yaksetup_content > $modpath/$modname/$modname.psm1
+  Echo $yaksetup_content | Out-File -Encoding Default -FilePath $modpath/$modname/$modname.psm1
   Import-Module $modname
 
   foreach($item in $conf) {
