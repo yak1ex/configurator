@@ -63,7 +63,12 @@ function main {
   $modname='YakSetup'
   If(!(Test-Path $modpath/$modname)) { mkdir $modpath/$modname }
   Echo $yaksetup_content | Out-File -Encoding Default -FilePath $modpath/$modname/$modname.psm1
+  If((Get-Module -Name $modname) -ne $null) {
+    Remove-Module $modname
+  }
   Import-Module $modname
+  Echo "[$modname]"
+  Echo "Install $modname PSmodule"
 
   foreach($item in $conf) {
     Echo ('['+$item[0]+']')
@@ -156,6 +161,18 @@ function InstallGtk {
 
 $yaksetup_content=@'
 # YakSetup.psm1
+
+function Invoke-Bootstrap {
+  <#
+   .Synopsis
+    Invoke the latest bootstrap from GitHub
+
+   .Description
+    Invoke the latest bootstrap from GitHub
+  #>
+
+  iex ((New-Object System.Net.WebClient).DownloadString('https://yak3.myhome.cx/rdr/bootstrap'))
+}
 
 function Request-Head {
   <#
@@ -515,7 +532,7 @@ function Cho {
   }
 }
 
-Export-ModuleMember -function Request-Head, Get-ArchivePath, Install-Archive, Add-PathEnv, Test-64BitEnv, Test-64BitProcess, Test-Admin, Get-ProgramFiles, Get-ConfigPlace, Expand-Bits, Cho
+Export-ModuleMember -function Invoke-Bootstrap, Request-Head, Get-ArchivePath, Install-Archive, Add-PathEnv, Test-64BitEnv, Test-64BitProcess, Test-Admin, Get-ProgramFiles, Get-ConfigPlace, Expand-Bits, Cho
 '@
 
 ############################################################

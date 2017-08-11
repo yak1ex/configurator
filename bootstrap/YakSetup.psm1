@@ -1,5 +1,17 @@
 # YakSetup.psm1
 
+function Invoke-Bootstrap {
+  <#
+   .Synopsis
+    Invoke the latest bootstrap from GitHub
+
+   .Description
+    Invoke the latest bootstrap from GitHub
+  #>
+
+  iex ((New-Object System.Net.WebClient).DownloadString('https://yak3.myhome.cx/rdr/bootstrap'))
+}
+
 function Request-Head {
   <#
    .Synopsis
@@ -358,4 +370,4 @@ function Cho {
   }
 }
 
-Export-ModuleMember -function Request-Head, Get-ArchivePath, Install-Archive, Add-PathEnv, Test-64BitEnv, Test-64BitProcess, Test-Admin, Get-ProgramFiles, Get-ConfigPlace, Expand-Bits, Cho
+Export-ModuleMember -function Invoke-Bootstrap, Request-Head, Get-ArchivePath, Install-Archive, Add-PathEnv, Test-64BitEnv, Test-64BitProcess, Test-Admin, Get-ProgramFiles, Get-ConfigPlace, Expand-Bits, Cho
