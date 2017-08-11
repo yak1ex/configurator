@@ -1,0 +1,26 @@
+{
+  "versions": {
+    "nwjs": "0.21.5",
+    "node": "7.8.0"
+  },
+  "dependencies": {
+    "bluebird": "^3.5.0",
+    "canvas": {
+      "version": "^1.6.5",
+      "arg": "--with_jpeg=true"
+    },
+    "chai": "^3.5.0",
+    "command-line-args": "^4.0.4",
+    "command-line-usage": "^4.0.0",
+    "follow-redirects": "^1.2.3",
+    "fs-extra": "^2.1.2",
+    "http-proxy-agent": "^1.0.0",
+    "https-proxy-agent": "^1.0.0",
+    "iconv-lite": "^0.4.17",
+    "jsdoc": "^3.4.3",
+    "mocha": "^3.2.0",
+    "nexe": "^1.1.2",
+    "nwjs": "^1.4.3",
+    "split2": "^2.1.1"
+  }
+}
