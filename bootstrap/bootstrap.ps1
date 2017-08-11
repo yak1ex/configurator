@@ -157,6 +157,34 @@ function InstallGtk {
 $yaksetup_content=@'
 # YakSetup.psm1
 
+function Request-Head {
+  <#
+   .Synopsis
+    Issue HTTP HEAD request to the specifed URL.
+
+   .Description
+    Issue HTTP HEAD request to the specifed URL.
+
+   .Parameter Url
+    The URL that HTTP HEAD request is issued to.
+
+   .Outputs
+    System.Net.WebResponse. You can examine response header content via Headers property.
+
+   .Example
+   $r=Request-Head('http://www.example.com/');Echo $r.LastModified
+   Get last modified date of the specified URL.
+  #>
+  param(
+    [parameter(Mandatory=$true)][string] $url=''
+  )
+
+# from https://stackoverflow.com/questions/3268926/head-with-webclient
+  $request = [System.Net.WebRequest]::Create($url)
+  $request.Method = "HEAD"
+  return $request.GetResponse()
+}
+
 function Get-ArchivePath {
   <#
    .Synopsis
@@ -487,7 +515,7 @@ function Cho {
   }
 }
 
-Export-ModuleMember -function Get-ArchivePath, Install-Archive, Add-PathEnv, Test-64BitEnv, Test-64BitProcess, Test-Admin, Get-ProgramFiles, Get-ConfigPlace, Expand-Bits, Cho
+Export-ModuleMember -function Request-Head, Get-ArchivePath, Install-Archive, Add-PathEnv, Test-64BitEnv, Test-64BitProcess, Test-Admin, Get-ProgramFiles, Get-ConfigPlace, Expand-Bits, Cho
 '@
 
 ############################################################
