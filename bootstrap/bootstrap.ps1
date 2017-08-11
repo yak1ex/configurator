@@ -1,5 +1,5 @@
 # Invoke as the following:
-# Set-ExecutionPolicy Bypass;iex ((New-Object System.Net.WebClient).DownloadString('https://gist.github.com/yak1ex/3dc898ce4d700e0016c60e78a12b5e4e/raw/bootstrap.ps1'));Set-ExecutionPolicy RemoteSigned
+# Set-ExecutionPolicy Bypass;iex ((New-Object System.Net.WebClient).DownloadString('https://yak3.myhome.cx/rdr/bootstrap'));Set-ExecutionPolicy RemoteSigned
 
 ############################################################
 # Admin check
