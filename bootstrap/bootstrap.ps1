@@ -53,8 +53,8 @@ function main {
   # Install chocolatey, if necessary
   Echo '[Chocolatey]'
   # Preparation
-  $psprofile_dir=${env:USERPROFILE}+"\WindowsPowerShell"
-  $psprofile_path=$psprofile_dir+"\Microsoft.PowerShell_profile.ps1"
+  $psprofile_dir=(${env:USERPROFILE}+"\Documents\WindowsPowerShell")
+  $psprofile_path=($psprofile_dir+"\Microsoft.PowerShell_profile.ps1")
   If(!(Test-Path $psprofile_dir)) {
     mkdir $psprofile_dir
   }
