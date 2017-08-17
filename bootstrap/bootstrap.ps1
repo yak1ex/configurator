@@ -13,7 +13,8 @@ If(!([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]:
 $conf = @(
   ('Afxw', 'Fit', {param($pf);return "$pf\ToolGUI\afxw"}),
   ('FFmpeg', 'Fit', {param($pf);return "$pf\ToolCUI\ffmpeg"}),
-  ('GTK', 'Fit', 'c:\usr\local\gtk2')
+  ('GTK', 'Fit', 'c:\usr\local\gtk2'),
+  ('KeySwap', '32', {param($pf);return "$pf\Utility\keyswap"})
 )
 
 function make_spec {
@@ -63,7 +64,6 @@ function main {
   }
 # TODO: Update chocolatey?
   If((dir -name env:) -notcontains 'ChocolateyInstall') {
-
     iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
   } else {
     Echo 'Chocolatey already installed'
@@ -171,7 +171,22 @@ function InstallGtk {
   }
 }
 
-# function InstallName32 { param($location) ... }
+function InstallKeySwap32 {
+  param($location)
+
+  $history=(New-Object System.Net.WebClient).DownloadString('http://www.asahi-net.or.jp/~ee7k-nsd/keyswpup.htm')
+  If(($history.Split("`n") | ? { $_ -match "Version \d+\.\d+<BR>" } | select -index 0) -match 'Version (\d+\.\d+)') {
+    $latest=$matches[1]
+  }
+  If((cat ($location+"\readme.txt")) -match 'KeySwap Ver.(\d+\.\d+)') {
+    $installed=$matches[1]
+  }
+  If($latest -eq $installed) {
+    Echo "KeySwap $installed already installed"
+  } Else {
+    Install-Archive 'http://www.asahi-net.or.jp/~ee7k-nsd/keyswap.lzh' ($location+"\..")
+  }
+}
 
 ############################################################
 # My PS module content
