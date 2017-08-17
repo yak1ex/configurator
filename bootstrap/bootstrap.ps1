@@ -49,15 +49,27 @@ function invoke_helper {
 function main {
   param($yaksetup_content)
 
+  ######################################################################
   # Install chocolatey, if necessary
   Echo '[Chocolatey]'
+  # Preparation
+  $psprofile_dir=${env:USERPROFILE}+"\WindowsPowerShell"
+  $psprofile_path=$psprofile_dir+"\Microsoft.PowerShell_profile.ps1"
+  If(!(Test-Path $psprofile_dir)) {
+    mkdir $psprofile_dir
+  }
+  If(!(Test-Path $psprofile_path) -or (Get-Item $psprofile_path).Length -lt 4) {
+    echo "####" | Out-File -Encoding Default -FilePath $psprofile_path
+  }
 # TODO: Update chocolatey?
   If((dir -name env:) -notcontains 'ChocolateyInstall') {
+
     iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
   } else {
     Echo 'Chocolatey already installed'
   }
 
+  ######################################################################
   # Install my PS modules
   $modpath=(${env:PSModulePath}.split(';') | ? {$_ -match 'Users' })
   $modname='YakSetup'
@@ -70,6 +82,8 @@ function main {
   Echo "[$modname]"
   Echo "Install $modname PSmodule"
 
+  ######################################################################
+  # Install non-chocolatey targets
   foreach($item in $conf) {
     Echo ('['+$item[0]+']')
     invoke_helper $item
