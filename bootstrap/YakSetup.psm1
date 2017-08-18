@@ -351,12 +351,12 @@ function Expand-Bits {
 
 $table=@{
   'jre8'=('Both', $true, @{
-    32={('-p', '"/exclude:64"', '-ia', "`"INSTALLDIR=`"`"${pf}\Library\Java\jre`"`"`"")};
-    64={('-p', '"/exclude:32"', '-ia', "`"INSTALLDIR=`"`"${pf}\Library\Java\jre`"`"`"")}
+    32={('--force', '--params', '"/exclude:64"', '-ia', "`"INSTALLDIR=`"`"${pf}\Library\Java\jre`"`"`"")};
+    64={('--force', '--params', '"/exclude:32"', '-ia', "`"INSTALLDIR=`"`"${pf}\Library\Java\jre`"`"`"")}
   });
   'jdk8'=('Both', $true, @{
-    32={('-p', '"x64=false"', '-ia', "`"INSTALLDIR=`"`"${pf}\Library\Java\jdk`"`"`"")};
-    64={('-p', '"x64=true"', '-ia', "`"INSTALLDIR=`"`"${pf}\Library\Java\jdk`"`"`"")}
+    32={('--force', '--params', '"x64=false"', '-ia', "`"INSTALLDIR=`"`"${pf}\Library\Java\jdk`"`"`"")};
+    64={('--force', '--params', '"x64=true"', '-ia', "`"INSTALLDIR=`"`"${pf}\Library\Java\jdk`"`"`"")}
   });
   'git.install'=('32', $false, @{32={('-p', '/NoAutoCrlf', '-ia', "`"/DIR=`"`"${pf}\ToolCUI\Git`"`"`"")}});
   'irfanview'=('Fit', $false, @{
@@ -390,12 +390,14 @@ function Cho {
     $reinstall=$table[$target][1]
     $params=$table[$target][2]
     $bits=(Expand-Bits $type)
+    If($reinstall) {
+      echo "choco uninstall $target"
+      choco uninstall $target
+    }
     foreach($bit in $bits) {
       $pf=(Get-ProgramFiles $bit)
       $actual_params=&$params[$bit]
       If($reinstall) {
-        echo "choco uninstall $target"
-        choco uninstall $target
         echo "choco install $target $actual_params"
         choco install $target @actual_params
       } Else {
