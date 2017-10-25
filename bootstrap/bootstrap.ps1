@@ -130,7 +130,7 @@ function InstallFFmpeg {
       $dir=$matches[1]
       $urlver=$matches[2]
     }
-    If((Test-Path "$($spec[$key])\README.txt") -and (cat "$($spec[$key])\README.txt" | ? { $_ -match 'FFmpeg version:' } | select -first 1) -match 'FFmpeg version: (.+)') {
+    If((Test-Path "$($spec[$key])\README.txt") -and (cat "$($spec[$key])\README.txt" | ? { $_ -match 'Build: ffmpeg-([\d.]+)-' } | select -first 1) -match 'Build: ffmpeg-([\d.]+)-') {
       $ver=$matches[1]
       if($ver -eq $urlver) {
         Echo "FFmpeg $ver already installed"
