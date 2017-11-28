@@ -12,9 +12,9 @@ If(!([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]:
 
 $conf = @(
   ('Afxw', 'Fit', {param($pf);return "$pf\ToolGUI\afxw"}),
-  ('FFmpeg', 'Fit', {param($pf);return "$pf\ToolCUI\ffmpeg"}),
-  ('GTK', 'Fit', 'c:\usr\local\gtk2'),
-  ('KeySwap', '32', {param($pf);return "$pf\Utility\keyswap"})
+  ('FFmpeg', 'Fit', {param($pf);return "$pf\ToolCUI\ffmpeg"})#,
+#  ('GTK', 'Fit', 'c:\usr\local\gtk2'),
+#  ('KeySwap', '32', {param($pf);return "$pf\Utility\keyswap"})
 )
 
 function make_spec {
@@ -42,6 +42,54 @@ function invoke_helper {
   } else {
     foreach($bits in $type) {
       & "$generic$bits" $spec[$bits]
+    }
+  }
+}
+
+function invoke_helper2_one {
+  param($verb, $name, $spec)
+
+  $generic="$verb$name"
+  if((dir -Name function:) -contains $generic) {
+    $result=(& $generic $spec)
+  } else {
+    $result=@{}
+    foreach($bits in $spec.Keys) {
+      $temp=& "$generic$bits" $spec[$bits]
+      $result[$bits]=$temp[$bits]
+    }
+  }
+  return $result
+}
+
+function invoke_helper2 {
+  param($verb, $item)
+  $type=@(Expand-Bits($item[1]))
+  $spec=(make_spec -type $type -location $item[2])
+  $rver=(invoke_helper2_one "GetRVer" $item[0] $spec)
+  $lver=(invoke_helper2_one "GetLVer" $item[0] $spec)
+#Echo ($rver | ConvertTo-Xml -Depth 3).InnerXml
+#Echo ($lver | ConvertTo-Xml -Depth 3).InnerXml
+  foreach($key in $spec.Keys) {
+    $lspec=@{$key=$spec[$key]}
+    if($rver[$key].numver -gt $lver[$key].numver) {
+      Echo "$($item[0])$key : Remote version $($rver[$key].ver) is newer than local version $($lver[$key].ver)"
+      if($verb -eq 'Install') {
+        $install=0
+        while($install -eq 0 -and $true -eq (invoke_helper2_one "IsLocked" $item[0] $lspec)) {
+          $install=(Select-Menu "Locked" "How to process?" @(@("&Retry","Retry install"),@("&Skip","Skip install")))
+        }
+        if($install -eq 0) {
+# FIXME: install needs more info, especially for url
+          invoke_helper2_one $verb $item[0] $lspec
+        }
+      }
+    } else {
+      $mes="$($item[0])$key : Local version $($lver[$key].ver) is equal to or newer than remote version $($rver[$key].ver)"
+      if($verb -eq 'Install') {
+        $mes="Skip, $mes"
+      }
+      Echo "$mes"
     }
   }
 }
@@ -87,12 +135,52 @@ function main {
   foreach($item in $conf) {
     Echo ('['+$item[0]+']')
     invoke_helper $item
+#    invoke_helper2 'Install' $item
   }
 }
 
 ############################################################
 # Installers
 ############################################################
+
+function GetRVerAfxw {
+  param($spec)
+
+  $base='http://akt.d.dooo.jp/'
+  $html='akt_afxw.html'
+  $filter_=@{32='<a id="\$afxw32\$" href="(.*)">';64='<a id="\$afxw64\$" href="(.*)">'}
+  $filter=@{}
+  foreach($key in $spec.Keys) {
+    $filter[$key] = $filter_[$key]
+  }
+  $urls=Get-ArchivePath -url "$base$html" -spec $filter -base $base
+  $results=@{}
+  foreach($key in $spec.Keys) {
+    $results[$key]=@{url=$urls[$key]}
+    if($urls[$key] -match "afxw\d+_(\d)(\d+).zip") {
+      $results[$key].ver=($matches[1]+"."+$matches[2])
+      $results[$key].numver=[int]$matches[1]*100+[int]$matches[2]
+    }
+  }
+  return $results
+}
+
+function GetLVerAfxw {
+  param($spec)
+
+  $results=@{}
+  foreach($key in $spec.Keys) {
+    If((Test-Path "$($spec[$key])\AFXW.txt") -and (cat "$($spec[$key])\AFXW.txt" | select -index 2) -match 'v(\d+)\.(\d+)') {
+      $results[$key]=@{ver=($matches[1]+"."+$matches[2]);numver=([int]$matches[1]*100+[int]$matches[2])}
+    }
+  }
+  return $results
+}
+
+function IsLockedAfxw {
+  param($spec)
+  return @(Get-Process | ? { $_.Name -eq "afxw"}).Count -gt 0
+}
 
 function InstallAfxw {
   param($spec)
@@ -114,6 +202,55 @@ function InstallAfxw {
       Install-Archive $urls[$key] $spec[$key]
     }
   }
+}
+
+function NumVer {
+  param($ver,$count,$rate)
+  $parts=($ver -split '\.')
+  for($i=$parts.Count;$i -lt $count;++$i) { $parts+=0 }
+  $result=0
+  foreach($part in $parts) {
+    $result=$result*$rate+$part
+  }
+  return $result
+}
+
+function GetRVerFFmpeg {
+  param($spec)
+
+  $url64="http://ffmpeg.zeranoe.com/builds/win64/static/"
+  $url32="http://ffmpeg.zeranoe.com/builds/win32/static/"
+  $restr="(ffmpeg-[\d.]+-win(?:32|64)-static.zip)"
+  $matcher={ param($content) if(($content -split "\n" | ? { $_ -match $restr } | select -last 1) -match $restr) { $matches[1] } }
+
+  $urls=Get-ArchivePath -spec @{32=@{"url"=$url32;"base"=$url32;"matcher"=$matcher};64=@{"url"=$url64;"base"=$url64;"matcher"=$matcher}}
+  $results=@{}
+  foreach($key in $spec.Keys) {
+    $results[$key]=@{url=$urls[$key]}
+    if($urls[$key] -match "(ffmpeg-([\d.]+)-win(?:32|64)-static).zip") {
+      $results[$key].dir=$matches[1]
+      $results[$key].ver=$matches[2]
+      $results[$key].numver=(NumVer $matches[2] 3 100)
+    }
+  }
+  return $results
+}
+
+function GetLVerFFmpeg {
+  param($spec)
+
+  $results=@{}
+  foreach($key in $spec.Keys) {
+    If((Test-Path "$($spec[$key])\README.txt") -and (cat "$($spec[$key])\README.txt" | ? { $_ -match 'Build: ffmpeg-([\d.]+)-' } | select -first 1) -match 'Build: ffmpeg-([\d.]+)-') {
+      $results[$key]=@{ver=$matches[1];numver=(NumVer $matches[1] 3 100)}
+    }
+  }
+  return $results
+}
+
+function IsLockedFFmpeg {
+# rarely used
+  return $false
 }
 
 function InstallFFmpeg {
