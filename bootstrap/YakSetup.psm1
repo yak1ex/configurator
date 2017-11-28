@@ -344,8 +344,8 @@ function Expand-Bits {
   switch($type) {
   'Fit' { If(Test-64BitEnv) { return @(64) } else { return @(32) }}
   'Both' { If(Test-64BitEnv) { return (64, 32) } else { return @(32) }}
-  '64' { If(Test-64BitEnv) { return @(64) } else { return $null }}
-  '32' { return 32 }
+  '64' { If(Test-64BitEnv) { return @(64) } else { return @() }}
+  '32' { return @(32) }
   }
 }
 
