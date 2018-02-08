@@ -647,6 +647,27 @@ function Get-ProgramFiles {
   }
 }
 
+function Get-ShortPathFolder {
+  <#
+   .Synopsis
+    Get the short path name of the specified folder path
+
+   .Description
+    Get the short path name of the specified folder path
+
+   .Outputs
+    [string] The short path name of the specified folder path
+
+   .Example
+    Get-ShortPathFolder "c:\Program Files"
+  #>
+  param ($folder)
+
+  $fso=New-Object -ComObject Scripting.FileSystemObject
+  $f=$fso.GetFolder($folder)
+  return $f.ShortPath
+}
+
 function Get-ConfigPlace {
   <#
    .Synopsis
@@ -738,6 +759,7 @@ function Cho {
     }
     foreach($bit in $bits) {
       $pf=(Get-ProgramFiles $bit)
+      $pfs=(Get-ShortPathFolder $pf)
       $actual_params=&$params[$bit]
       If($reinstall) {
         echo "choco install $target $actual_params"
