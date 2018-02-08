@@ -241,6 +241,7 @@ function InstallFFmpeg {
       $choice=Select-Menu "[Confirmation]" "Delete these files?" @(@("&Yes", "Delete these files"), @("&No", "Retain these files"))
       If($choice -eq 0) { Remove-Item -Recurse $spec[$key].location }
     }
+    $dir=$spec[$key].rver.dir
     Move-Item ((split-path -parent $spec[$key].location)+"\$dir") $spec[$key].location
     Add-PathEnv ($spec[$key].location+'\bin')
   }
