@@ -383,6 +383,10 @@ $table=@{
   'irfanview'=('Fit', $false, @{
     32={('-ia', "`"/folder=`"`"${pf}\ToolGUI\IrfanView`"`"`"")};
     64={('-ia', "`"/folder=`"`"${pf}\ToolGUI\IrfanView`"`"`"")}
+  });
+  'notepadplusplus.install'=('Fit', $false, @{
+    32={('-ia', "`"/D=`"`"${pf}\ToolGUI\notepad++`"`"`"")};
+    64={('-ia', "`"/D=`"`"${pf}\ToolGUI\notepad++`"`"`"")}
   })
 }
 
