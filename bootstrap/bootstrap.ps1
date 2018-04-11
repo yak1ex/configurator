@@ -712,6 +712,7 @@ function Expand-Bits {
   }
 }
 
+# SupportBits, UpgradeByUninstallAndInstall, Args@{bits={(args,...)}}
 $table=@{
   'jre8'=('Both', $true, @{
     32={('--force', '--params', '"/exclude:64"', '-ia', "`"INSTALLDIR=`"`"${pf}\Library\Java\jre`"`"`"")};
@@ -727,9 +728,10 @@ $table=@{
     64={('-ia', "`"/folder=`"`"${pf}\ToolGUI\IrfanView`"`"`"")}
   });
   'notepadplusplus.install'=('Fit', $false, @{
-    32={('-ia', "/D=${pfs}\ToolGUI\notepad++")};
-    64={('-ia', "/D=${pfs}\ToolGUI\notepad++")}
-  })
+    32={('-ia', "`"/D=`"`"${pf}\ToolGUI\notepad++`"`"`"")};
+    64={('-ia', "`"/D=`"`"${pf}\ToolGUI\notepad++`"`"`"")}
+  });
+  'svn'=('32', $false, @{32={('-ia', "`"INSTALLDIR=`"`"${pf}\ToolCUI\Subversion`"`"`"")}})
 }
 
 function Cho {

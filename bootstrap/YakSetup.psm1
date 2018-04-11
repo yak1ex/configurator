@@ -370,6 +370,7 @@ function Expand-Bits {
   }
 }
 
+# SupportBits, UpgradeByUninstallAndInstall, Args@{bits={(args,...)}}
 $table=@{
   'jre8'=('Both', $true, @{
     32={('--force', '--params', '"/exclude:64"', '-ia', "`"INSTALLDIR=`"`"${pf}\Library\Java\jre`"`"`"")};
@@ -387,7 +388,8 @@ $table=@{
   'notepadplusplus.install'=('Fit', $false, @{
     32={('-ia', "`"/D=`"`"${pf}\ToolGUI\notepad++`"`"`"")};
     64={('-ia', "`"/D=`"`"${pf}\ToolGUI\notepad++`"`"`"")}
-  })
+  });
+  'svn'=('32', $false, @{32={('-ia', "`"INSTALLDIR=`"`"${pf}\ToolCUI\Subversion`"`"`"")}})
 }
 
 function Cho {
@@ -421,6 +423,7 @@ function Cho {
     }
     foreach($bit in $bits) {
       $pf=(Get-ProgramFiles $bit)
+      $pfs=(Get-ShortPathFolder $pf)
       $actual_params=&$params[$bit]
       If($reinstall) {
         echo "choco install $target $actual_params"
