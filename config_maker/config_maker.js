@@ -68,6 +68,20 @@ const question = (query, opt) => new Promise((resolve, reject) => {
   rl.question(query, cb)
 })
 
+const readdirRecur = (dir, cb) => {
+  const result = []
+  const process = (target, base) => fs.readdirAsync(path.join(base, target)).map(e =>
+    fs.statAsync(path.join(base, target, e)).then(st => {
+      if(st.isDirectory()) {
+        return process(path.join(target, e), base)
+      } else {
+        result.push(target === '.' ? e : path.join(target, e))
+      }
+    })).all()
+  process('.', dir).then(() => cb(null, result)).catch(e => cb(e))
+}
+const readdirRecurAsync = Promise.promisify(readdirRecur)
+
 const match = (filename, choice, defval) => {
   if (!choice) return defval
   const ret = choice.find(e => minimatch(filename, e[0]))
@@ -82,10 +96,8 @@ const origContext = make_context()
 
   await fs.removeAsync(work)
   await fs.mkdirpAsync(work)
-  let files = await fs.readdirAsync(input)
-console.log(input)
 
-  files.filter(v => v.match(/\.js$/)).map(async filename => {
+  fs.readdirAsync(input).then(files => files.filter(v => v.match(/\.js$/))).mapSeries(async filename => {
 // collect phase
     const script = await fs.readFileAsync(path.join(input, filename))
     const context = Object.assign(origContext)
@@ -96,22 +108,22 @@ console.log(input)
     const dirname = filename.substring(0, filename.length - 3)
     const outdir = path.join(work, dirname)
     await fs.mkdirAsync(outdir)
-    const files = await fs.readdirAsync(path.join(input, dirname))
-    await Promise.all(files.map(async filename => {
+    await readdirRecurAsync(path.join(input, dirname)).then(files => files.map(async filename => {
       const encoding = match(filename, context.encoding, 'sjis')
       const buf = await fs.readFileAsync(path.join(input, dirname, filename))
+      await fs.ensureFileAsync(path.join(outdir, filename))
       fs.writeFileAsync(path.join(outdir, filename), iconv.encode(Mustache.render(iconv.decode(buf, encoding), context), encoding))
-    }))
+    })).all()
 
 // install phase
-    const filesTemp = await fs.readdirAsync(path.join(work, dirname))
-    filesTemp.map(async filename => {
+    return readdirRecurAsync(path.join(work, dirname)).mapSeries(async filename => {
       const instdir = match(filename, context.install)
       if(instdir) {
         const encoding = match(filename, context.encoding, 'sjis')
-        const curr = path.join(instdir, filename)
+        const curr = path.join(instdir, path.basename(filename))
         const temp = path.join(outdir, filename)
-        const currContent = iconv.decode(await fs.readFileAsync(curr), encoding)
+        const newFile = !fs.existsSync(curr)
+        const currContent = newFile ? '' : iconv.decode(await fs.readFileAsync(curr), encoding)
         const tempContent = iconv.decode(await fs.readFileAsync(temp), encoding)
         console.log(JsDiff.createTwoFilesPatch(curr, temp, currContent, tempContent))
         if (currContent === tempContent) {
@@ -124,7 +136,7 @@ console.log(input)
           })
         }
       }
-    })
+    }).all()
   })
 
 })() // invoking main
