@@ -53,10 +53,12 @@ function make_context () {
   return vm.createContext(context_base)
 }
 
-const question = (query, choice) => new Promise((resolve, reject) => {
+const question = (query, opt) => new Promise((resolve, reject) => {
+  const option = Object.assign({ choice: [] }, opt)
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
   const cb = (answer) => {
-    if(choice.includes(answer)) {
+    if(answer === '' && 'default' in option) answer = option.default
+    if(option.choice.includes(answer)) {
       rl.close()
       resolve(answer)
     } else {
@@ -115,7 +117,7 @@ console.log(input)
         if (currContent === tempContent) {
           console.log('No differences, skip')
         } else {
-          await question('apply Y/N? ', ['Y','N']).then(answer => {
+          return question('apply Y/[N]? ', { choice: ['Y','N'], default: 'N' }).then(answer => {
             if(answer === 'Y') {
               fs.copyAsync(temp, curr)
             }
