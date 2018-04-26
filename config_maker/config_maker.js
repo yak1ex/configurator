@@ -97,7 +97,7 @@ const origContext = make_context()
   await fs.removeAsync(work)
   await fs.mkdirpAsync(work)
 
-  fs.readdirAsync(input).then(files => files.filter(v => v.match(/\.js$/))).mapSeries(async filename => {
+  fs.readdirAsync(input).filter(v => v.match(/\.js$/)).mapSeries(async filename => {
 // collect phase
     const script = await fs.readFileAsync(path.join(input, filename))
     const context = Object.assign(origContext)
@@ -108,12 +108,12 @@ const origContext = make_context()
     const dirname = filename.substring(0, filename.length - 3)
     const outdir = path.join(work, dirname)
     await fs.mkdirAsync(outdir)
-    await readdirRecurAsync(path.join(input, dirname)).then(files => files.map(async filename => {
+    await readdirRecurAsync(path.join(input, dirname)).map(async filename => {
       const encoding = match(filename, context.encoding, 'sjis')
       const buf = await fs.readFileAsync(path.join(input, dirname, filename))
       await fs.ensureFileAsync(path.join(outdir, filename))
       fs.writeFileAsync(path.join(outdir, filename), iconv.encode(Mustache.render(iconv.decode(buf, encoding), context), encoding))
-    })).all()
+    }).all()
 
 // install phase
     return readdirRecurAsync(path.join(work, dirname)).mapSeries(async filename => {
