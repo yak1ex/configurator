@@ -731,7 +731,11 @@ $table=@{
     32={('-ia', "`"/D=`"`"${pf}\ToolGUI\notepad++`"`"`"")};
     64={('-ia', "`"/D=`"`"${pf}\ToolGUI\notepad++`"`"`"")}
   });
-  'svn'=('32', $false, @{32={('-ia', "`"INSTALLDIR=`"`"${pf}\ToolCUI\Subversion`"`"`"")}})
+  'svn'=('32', $false, @{32={('-ia', "`"INSTALLDIR=`"`"${pf}\ToolCUI\Subversion`"`"`"")}});
+  'strawberryperl'=('Fit', $true, @{
+    32={('-ia', "`"INSTALLDIR=`"`"c:\usr\local\strawberry`"`"`"")};
+    64={('-ia', "`"INSTALLDIR=`"`"c:\usr\local\strawberry`"`"`"")}
+  })
 }
 
 function Cho {
