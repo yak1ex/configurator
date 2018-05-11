@@ -222,6 +222,9 @@ function GetLVerFFmpeg {
     If((Test-Path "$($spec[$key].location)\README.txt") -and (cat "$($spec[$key].location)\README.txt" | ? { $_ -match 'Build: ffmpeg-([\d.]+)-' } | select -first 1) -match 'Build: ffmpeg-([\d.]+)-') {
       $results[$key]=@{ver=$matches[1];numver=(NumVer $matches[1] 3 100)}
     }
+    If((Test-Path "$($spec[$key].location)\README.txt") -and (cat "$($spec[$key].location)\README.txt" | ? { $_ -match 'FFmpeg version: ([\d.]+)' } | select -first 1) -match 'FFmpeg version: ([\d.]+)') {
+      $results[$key]=@{ver=$matches[1];numver=(NumVer $matches[1] 3 100)}
+    }
   }
   return $results
 }
