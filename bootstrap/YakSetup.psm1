@@ -371,6 +371,7 @@ function Expand-Bits {
 }
 
 # SupportBits, UpgradeByUninstallAndInstall, Args@{bits={(args,...)}}
+$Both = 0
 $table=@{
   'jre8'=('Both', $true, @{
     32={('--force', '--params', '"/exclude:64"', '-ia', "`"INSTALLDIR=`"`"${pf}\Library\Java\jre`"`"`"")};
@@ -382,17 +383,14 @@ $table=@{
   });
   'git.install'=('32', $true, @{32={('-p', '/NoAutoCrlf', '-ia', "`"/DIR=`"`"${pf}\ToolCUI\Git`"`"`"")}});
   'irfanview'=('Fit', $false, @{
-    32={('-ia', "`"/folder=`"`"${pf}\ToolGUI\IrfanView`"`"`"")};
-    64={('-ia', "`"/folder=`"`"${pf}\ToolGUI\IrfanView`"`"`"")}
+    $Both={('-ia', "`"/folder=`"`"${pf}\ToolGUI\IrfanView`"`"`"")}
   });
   'notepadplusplus.install'=('Fit', $false, @{
-    32={('-ia', "`"/D=`"`"${pf}\ToolGUI\notepad++`"`"`"")};
-    64={('-ia', "`"/D=`"`"${pf}\ToolGUI\notepad++`"`"`"")}
+    $Both={('-ia', "`"/D=`"`"${pf}\ToolGUI\notepad++`"`"`"")}
   });
   'svn'=('32', $false, @{32={('-ia', "`"INSTALLDIR=`"`"${pf}\ToolCUI\Subversion`"`"`"")}});
   'strawberryperl'=('Fit', $true, @{
-    32={('-ia', "`"INSTALLDIR=`"`"c:\usr\local\strawberry`"`"`"")};
-    64={('-ia', "`"INSTALLDIR=`"`"c:\usr\local\strawberry`"`"`"")}
+    $Both={('-ia', "`"INSTALLDIR=`"`"c:\usr\local\strawberry`"`"`"")}
   })
 }
 
@@ -428,7 +426,11 @@ function Cho {
     foreach($bit in $bits) {
       $pf=(Get-ProgramFiles $bit)
       $pfs=(Get-ShortPathFolder $pf)
-      $actual_params=&$params[$bit]
+      If($params.Contains($Both)) {
+        $actual_params=&$params[$Both]
+      } Else {
+        $actual_params=&$params[$bit]
+      }
       If($reinstall) {
         echo "choco install $target $actual_params"
         choco install $target @actual_params
