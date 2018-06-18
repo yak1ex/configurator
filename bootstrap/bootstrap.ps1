@@ -760,7 +760,7 @@ function Cho {
   param($target)
 
   If($target -eq $null) {
-    Echo $table.Keys
+    $table.GetEnumerator() | sort Name | % Name
   } Elseif($table.Keys -contains $target) {
     $type=$table[$target][0]
     $reinstall=$table[$target][1]
