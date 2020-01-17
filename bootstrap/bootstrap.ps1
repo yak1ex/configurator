@@ -292,7 +292,7 @@ function GetLVerGtk {
 
 function IsLockedGtk {
 # Gtk is rarely locked
-  return $true
+  return $false
 }
 
 function InstallGtk {
@@ -329,7 +329,7 @@ function GetLVerKeySwap32 {
 
 function IsLockedKeySwap32 {
 # KeySwap is rarely locked
-  return $true
+  return $false
 }
 
 function InstallKeySwap32 {
