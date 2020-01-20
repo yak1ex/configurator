@@ -85,7 +85,7 @@ function invoke_helper_one {
   } else {
     $result=@{}
     foreach($bits in $spec.Keys) {
-      $temp=& "$generic$bits" $spec[$bits]
+      $temp=(& "$generic$bits" $spec[$bits])
       $result[$bits]=$temp[$bits]
     }
   }
@@ -108,7 +108,7 @@ function invoke_helper {
       Echo "$($item[0])$key : Remote version $($rver[$key].ver) is newer than local version $($lver[$key].ver)"
       if($verb -eq 'Install') {
         $install=0
-        while($install -eq 0 -and $true -eq (invoke_helper_one "IsLocked" $item[0] $lspec)) {
+        while($install -eq 0 -and $true -eq (invoke_helper_one "IsLocked" $item[0] $lspec)[$key]) {
           $install=(Select-Menu "Locked" "How to process?" @(@("&Retry","Retry install"),@("&Skip","Skip install")))
         }
         if($install -eq 0) {
@@ -177,9 +177,11 @@ function GetLVerAfxw {
   return $results
 }
 
+# TODO: consider keys
 function IsLockedAfxw {
   param($spec)
-  return @(Get-Process | ? { $_.Name -eq "afxw"}).Count -gt 0
+  $result=@(Get-Process | ? { $_.Name -eq "afxw"}).Count -gt 0
+  return @{32=$result;64=$result}
 }
 
 function InstallAfxw {
@@ -231,7 +233,7 @@ function GetLVerFFmpeg {
 
 function IsLockedFFmpeg {
 # FFmpeg is rarely locked
-  return $false
+  return @{32=$false;64=$false}
 }
 
 function InstallFFmpeg {
@@ -292,7 +294,7 @@ function GetLVerGtk {
 
 function IsLockedGtk {
 # Gtk is rarely locked
-  return $false
+  return @{32=$false;64=$false}
 }
 
 function InstallGtk {
