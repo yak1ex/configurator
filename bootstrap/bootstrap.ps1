@@ -42,7 +42,7 @@ function main {
 
   ######################################################################
   # Install my PS modules
-  $modpath=(${env:PSModulePath}.split(';') | ? {$_ -match 'Users' })
+  $modpath=(${env:PSModulePath}.split(';') | ? {$_ -match 'Users.*WindowsPowerShell' })
   $modname='YakSetup'
   If(!(Test-Path $modpath/$modname)) { mkdir $modpath/$modname }
   Echo $yaksetup_content | Out-File -Encoding Default -FilePath $modpath/$modname/$modname.psm1
