@@ -386,7 +386,7 @@ $table=@{
     $Both={('-ia', "`"/folder=`"`"${pf}\ToolGUI\IrfanView`"`"`"")}
   });
   'notepadplusplus.install'=('Fit', $false, @{
-    $Both={('-ia', "`"/D=`"`"${pf}\ToolGUI\notepad++`"`"`"")}
+    $Both={('-ia', "/D=${pfs}\ToolGUI\notepad++")}
   });
   'svn'=('32', $false, @{32={('-ia', "`"INSTALLDIR=`"`"${pf}\ToolCUI\Subversion`"`"`"")}});
   'anaconda3'=('Fit', $false, @{
