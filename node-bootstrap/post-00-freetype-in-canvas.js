@@ -1,5 +1,7 @@
+process.env['NO_UPDATE_NOTIFIER'] = 'TRUE' // without this, executing npm is blocked
 const gtk_prefix = path.dirname(find_path('libgtk-win32-2.0-0.dll'));
-const target = path.join(process.env.npm_config_prefix, 'node_modules/canvas/build/Release');
+const npm_prefix = exec_get('npm config get prefix').trim()
+const target = path.join(npm_prefix, 'node_modules/canvas/build/Release');
 
 if(!fs.existsSync(path.join(target, 'libfreetype-6.dll'))) {
   console.log('copy freetype6.dll');
