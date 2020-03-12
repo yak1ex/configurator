@@ -15,4 +15,5 @@ if(!(key in versions)) {
   console.error(`Unknown version identifier ${key}`);
   process.exit(1);
 }
+exec(`set`); // workaround
 exec(`npm config set msvs_version ${versions[key]}`);
