@@ -1,1 +1,1 @@
-exec(`nodist global ${bootstrap.versions.node}`);
+exec(`nvm use ${bootstrap.versions.node}`);
