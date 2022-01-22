@@ -198,20 +198,17 @@ function InstallAfxw {
 function GetRVerFFmpeg {
   param($spec)
 
-  $url64="http://ffmpeg.zeranoe.com/builds/win64/static/"
-  $url32="http://ffmpeg.zeranoe.com/builds/win32/static/"
-  $restr="(ffmpeg-[\d.]+-win(?:32|64)-static.zip)"
-  $matcher={ param($content) if(($content -split "\n" | ? { $_ -match $restr } | select -last 1) -match $restr) { $matches[1] } }
+  $verurl="https://www.gyan.dev/ffmpeg/builds/git-version"
+  $ver=(New-Object System.Net.WebClient).DownloadString($verurl)
+  $base="ffmpeg-${ver}-full_build"
 
-  $urls=Get-ArchivePath -spec @{32=@{"url"=$url32;"base"=$url32;"matcher"=$matcher};64=@{"url"=$url64;"base"=$url64;"matcher"=$matcher}}
-  $results=@{}
-  foreach($key in $spec.Keys) {
-    $results[$key]=@{url=$urls[$key]}
-    if($urls[$key] -match "(ffmpeg-([\d.]+)-win(?:32|64)-static).zip") {
-      $results[$key].dir=$matches[1]
-      $results[$key].ver=$matches[2]
-      $results[$key].numver=(NumVer $matches[2] 3 100)
-    }
+  if($ver -match "^(\d{4}-\d{2}-\d{2})") {
+    $results=@{64=@{
+      "url"="https://www.gyan.dev/ffmpeg/builds/packages/${base}.7z";
+      "dir"=$base;
+      "ver"=$ver;
+      "numver"=(NumVer $matches[1] 3 100)
+    }}
   }
   return $results
 }
@@ -221,11 +218,8 @@ function GetLVerFFmpeg {
 
   $results=@{}
   foreach($key in $spec.Keys) {
-    If((Test-Path "$($spec[$key].location)\README.txt") -and (cat "$($spec[$key].location)\README.txt" | ? { $_ -match 'Build: ffmpeg-([\d.]+)-' } | select -first 1) -match 'Build: ffmpeg-([\d.]+)-') {
-      $results[$key]=@{ver=$matches[1];numver=(NumVer $matches[1] 3 100)}
-    }
-    If((Test-Path "$($spec[$key].location)\README.txt") -and (cat "$($spec[$key].location)\README.txt" | ? { $_ -match 'FFmpeg version: ([\d.]+)' } | select -first 1) -match 'FFmpeg version: ([\d.]+)') {
-      $results[$key]=@{ver=$matches[1];numver=(NumVer $matches[1] 3 100)}
+    If((Test-Path "$($spec[$key].location)\README.txt") -and (cat "$($spec[$key].location)\README.txt" | ? { $_ -match 'Version: \d{4}-\d{2}-\d{2}-git-' } | select -first 1) -match 'Version: ((\d{4}-\d{2}-\d{2})-git-[0-9a-f]+)') {
+      $results[$key]=@{ver=$matches[1];numver=(NumVer $matches[2] 3 100)}
     }
   }
   return $results
