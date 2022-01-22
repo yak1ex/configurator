@@ -371,6 +371,8 @@ function Expand-Bits {
 }
 
 # SupportBits, UpgradeByUninstallAndInstall, Args@{bits={(args,...)}}
+# --params: to pass to the package
+# -ia: --install-args to pass to the native installer
 $Both = 0
 $table=@{
   'jre8'=('Both', $true, @{
