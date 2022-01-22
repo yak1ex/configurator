@@ -718,6 +718,8 @@ function Expand-Bits {
 }
 
 # SupportBits, UpgradeByUninstallAndInstall, Args@{bits={(args,...)}}
+# --params: to pass to the package
+# -ia: --install-args to pass to the native installer
 $Both = 0
 $table=@{
   'jre8'=('Both', $true, @{
@@ -728,7 +730,9 @@ $table=@{
     32={('--force', '--params', '"x64=false"', '-ia', "`"INSTALLDIR=`"`"${pf}\Library\Java\jdk`"`"`"")};
     64={('--force', '--params', '"x64=true"', '-ia', "`"INSTALLDIR=`"`"${pf}\Library\Java\jdk`"`"`"")}
   });
-  'git.install'=('32', $true, @{32={('-p', '/NoAutoCrlf', '-ia', "`"/DIR=`"`"${pf}\ToolCUI\Git`"`"`"")}});
+  'git.install'=('Fit', $true, @{
+    $Both={('--params', '/GitOnlyOnPath /NoAutoCrlf /WindowsTerminal /NoShellIntegration /WindowsTerminalProfile', '-ia', "`"/DIR=`"`"${pf}\ToolCUI\Git`"`"`"")}
+  });
   'irfanview'=('Fit', $false, @{
     $Both={('-ia', "`"/folder=`"`"${pf}\ToolGUI\IrfanView`"`"`"")}
   });
