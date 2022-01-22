@@ -131,7 +131,7 @@ function invoke_helper {
 
 function NumVer {
   param($ver,$count,$rate)
-  $parts=($ver -split '\.')
+  $parts=($ver -split '[.-]')
   for($i=$parts.Count;$i -lt $count;++$i) { $parts+=0 }
   $result=0
   foreach($part in $parts) {
