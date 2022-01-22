@@ -383,7 +383,7 @@ $table=@{
     32={('--force', '--params', '"x64=false"', '-ia', "`"INSTALLDIR=`"`"${pf}\Library\Java\jdk`"`"`"")};
     64={('--force', '--params', '"x64=true"', '-ia', "`"INSTALLDIR=`"`"${pf}\Library\Java\jdk`"`"`"")}
   });
-  'git.install'=('32', $true, @{32={('-p', '/NoAutoCrlf', '-ia', "`"/DIR=`"`"${pf}\ToolCUI\Git`"`"`"")}});
+  'git.install'=('32', $true, @{32={('--params', '/GitOnlyOnPath /NoAutoCrlf /WindowsTerminal /NoShellIntegration /WindowsTerminalProfile', '-ia', "`"/DIR=`"`"${pf}\ToolCUI\Git`"`"`"")}});
   'irfanview'=('Fit', $false, @{
     $Both={('-ia', "`"/folder=`"`"${pf}\ToolGUI\IrfanView`"`"`"")}
   });
