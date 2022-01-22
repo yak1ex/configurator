@@ -75,18 +75,21 @@ function make_spec {
   return $result
 }
 
-# TODO: missing IsLocked can be treated as constant $false
 function invoke_helper_one {
   param($verb, $name, $spec)
 
   $generic="$verb$name"
-  if((dir -Name function:) -contains $generic) {
+  if(Test-Path "function:$generic") {
     $result=(& $generic $spec)
   } else {
     $result=@{}
     foreach($bits in $spec.Keys) {
-      $temp=(& "$generic$bits" $spec[$bits])
-      $result[$bits]=$temp[$bits]
+      foreach($func in @("$generic$bits", "$verb")) {
+        if(Test-Path "function:$func") {
+          $temp=(& $func $spec[$bits])
+          $result[$bits]=$temp[$bits]
+        }
+      }
     }
   }
   return $result
@@ -138,6 +141,13 @@ function NumVer {
     $result=$result*$rate+[int]$part
   }
   return $result
+}
+
+# A fallback function for IsLocked
+# Always returns false
+function IsLocked {
+  param($spec)
+  return @{32=$false;64=$false}
 }
 
 ######
@@ -225,10 +235,7 @@ function GetLVerFFmpeg {
   return $results
 }
 
-function IsLockedFFmpeg {
 # FFmpeg is rarely locked
-  return @{32=$false;64=$false}
-}
 
 function InstallFFmpeg {
   param($spec)
@@ -286,10 +293,7 @@ function GetLVerGtk {
   return $results
 }
 
-function IsLockedGtk {
 # Gtk is rarely locked
-  return @{32=$false;64=$false}
-}
 
 function InstallGtk {
   param($spec)
@@ -323,10 +327,7 @@ function GetLVerKeySwap32 {
   return $results
 }
 
-function IsLockedKeySwap32 {
 # KeySwap is rarely locked
-  return $false
-}
 
 function InstallKeySwap32 {
   param($spec)
