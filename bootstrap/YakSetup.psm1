@@ -398,7 +398,13 @@ $table=@{
   });
   'strawberryperl'=('Fit', $true, @{
     $Both={('-ia', "`"INSTALLDIR=`"`"c:\usr\local\strawberry`"`"`"")}
-  })
+  });
+  'mpc-hc-clsid2'=('Fit', $false, @{
+    $Both={('-ia', "`"/TASKS=!desktopicon /DIR=`"`"${pf}\ToolGUI\MPC-HC`"`"`"")}
+  });
+  'winmerge'=('Fit', $false, @{
+    $Both={('-ia', "`"/TASKS= /DIR=`"`"${pf}\ToolGUI\WinMerge`"`"`"")}
+  });
 }
 
 function Cho {
