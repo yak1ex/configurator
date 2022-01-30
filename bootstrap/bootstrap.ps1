@@ -12,6 +12,7 @@ If(!([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]:
 
 $conf = @(
   ('Afxw', 'Fit', {param($pf);return "$pf\ToolGUI\afxw"}),
+  ('CMigemo', 'Fit', {param($pf);return "$pf\ToolGUI\afxw"}),
   ('FFmpeg', 'Fit', {param($pf);return "$pf\ToolCUI\ffmpeg"}),
   ('GTK', 'Fit', 'c:\usr\local\gtk2'),
   ('KeySwap', '32', {param($pf);return "$pf\Utility\keyswap"})
@@ -199,6 +200,68 @@ function InstallAfxw {
 
   foreach($key in $spec.Keys) {
     Install-Archive $spec[$key].rver.url $spec[$key].location
+  }
+}
+
+#########
+# CMigemo
+
+function GetRVerCMigemo {
+  param($spec)
+
+  $url = @{
+    32='http://files.kaoriya.net/goto/cmigemo_w32';
+    64='http://files.kaoriya.net/goto/cmigemo_w64'
+  }
+  $results=@{}
+  foreach($key in $spec.Keys) {
+    $res = Request-Head($url[$key])
+    $base = "cmigemo-default-win${key}"
+    if($res.ResponseUri -match "${base}-(\d+)\.zip") {
+      $results[$key]=@{
+        ver=$matches[1];
+        numver=$matches[1];
+        url=$res.ResponseUri;
+        dir=$base
+      }
+    }
+  }
+  return $results
+}
+
+function GetLVerCMigemo {
+  param($spec)
+
+  $results=@{}
+  foreach($key in $spec.Keys) {
+    $path = "$($spec[$key].location)\migemo.dll"
+    If(Test-Path $path) {
+      $lwt = (Get-Item $path).LastWriteTime
+      $ver = "{0,4:0000}{1,2:00}{2,2:00}" -f $lwt.Year,$lwt.Month,$lwt.Day
+      $results[$key]=@{ver=$ver;numver=$ver}
+    }
+  }
+  return $results
+}
+
+# TODO: consider keys
+function IsLockedCMigemo {
+  param($spec)
+  $result=@(Get-Process | ? { $_.Name -eq "afxw"}).Count -gt 0
+  return @{32=$result;64=$result}
+}
+
+function InstallCMigemo {
+  param($spec)
+
+  foreach($key in $spec.Keys) {
+    $tdir=$env:TEMP+'\'+[System.IO.Path]::GetRandomFileName()
+    $dir=$spec[$key].rver.dir
+    mkdir $tdir
+    Write-Host $spec[$key].rver.url  $tdir
+    Install-Archive $spec[$key].rver.url $tdir
+    Copy-Item "$tdir\$dir\migemo.dll" $($spec[$key].location)
+    Copy-Item -Recurse "$tdir\$dir\dict\cp932" "$($spec[$key].location)\dict"
   }
 }
 
