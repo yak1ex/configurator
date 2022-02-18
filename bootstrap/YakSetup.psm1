@@ -423,37 +423,41 @@ function Cho {
     Cho
     List available targets
   #>
-  param($target)
+  param(
+    [string[]]
+    [Parameter(Position=0, ValueFromRemainingArguments)]
+    $targets)
 
-  If($target -eq $null) {
+  If($targets.Count -eq 0) {
     $table.GetEnumerator() | sort Name | % Name
-  } Elseif($table.Keys -contains $target) {
-    $type=$table[$target][0]
-    $reinstall=$table[$target][1]
-    $params=$table[$target][2]
-    $bits=(Expand-Bits $type)
-    If($reinstall) {
-      echo "choco uninstall $target"
-      choco uninstall $target
-    }
-    foreach($bit in $bits) {
-      $pf=(Get-ProgramFiles $bit)
-      $pfs=(Get-ShortPathFolder $pf)
-      If($params.Contains($Both)) {
-        $actual_params=&$params[$Both]
-      } Else {
-        $actual_params=&$params[$bit]
-      }
+  } Else {
+    $rargs = $targets.Where{$_ -notin $table.Keys}
+    foreach($target in $targets.Where{$_ -in $table.Keys}) {
+      $type=$table[$target][0]
+      $reinstall=$table[$target][1]
+      $params=$table[$target][2]
+      $bits=(Expand-Bits $type)
       If($reinstall) {
-        echo "choco install $target $actual_params"
-        choco install $target @actual_params
-      } Else {
-        echo "choco upgrade $target $actual_params"
-        choco upgrade $target @actual_params
+        echo "choco uninstall $target $rargs"
+        choco uninstall $target $rargs
+      }
+      foreach($bit in $bits) {
+        $pf=(Get-ProgramFiles $bit)
+        $pfs=(Get-ShortPathFolder $pf)
+        If($params.Contains($Both)) {
+          $actual_params=&$params[$Both]
+        } Else {
+          $actual_params=&$params[$bit]
+        }
+        If($reinstall) {
+          echo "choco install $target $actual_params $rargs"
+          choco install $target @actual_params $rargs
+        } Else {
+          echo "choco upgrade $target $actual_params $rargs"
+          choco upgrade $target @actual_params $rargs
+        }
       }
     }
-  } else {
-    Echo "$target not found"
   }
 }
 
