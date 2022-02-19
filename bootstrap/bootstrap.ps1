@@ -31,6 +31,7 @@ function main {
   If(!(Test-Path $psprofile_dir)) {
     mkdir $psprofile_dir
   }
+  # ref. https://github.com/chocolatey/choco/issues/991
   If(!(Test-Path $psprofile_path) -or (Get-Item $psprofile_path).Length -lt 4) {
     echo "####" | Out-File -Encoding Default -FilePath $psprofile_path
   }
