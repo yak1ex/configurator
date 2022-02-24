@@ -3,7 +3,16 @@
     "nwjs": "0.32.1",
     "node": "10.8.0"
   },
-  "dependencies": {
+  "global": {
+    "gulp-cli": "^2.0.1",
+    "jsdoc": "^3.4.3",
+    "mermaid.cli": "^0.4.6",
+    "nexe": "^1.1.2",
+    "nwjs": "^1.4.3",
+    "standard": "^11.0.0",
+    "web-ext": "^2.5.0"
+  },
+  "common": {
     "@ronomon/utimes": "^2.2.0",
     "bluebird": "^3.5.0",
     "canvas": {
@@ -15,17 +24,10 @@
     "command-line-usage": "^5.0.0",
     "follow-redirects": "^1.2.3",
     "fs-extra": "^7.0.0",
-    "gulp-cli": "^2.0.1",
     "http-proxy-agent": "^1.0.0",
     "https-proxy-agent": "^1.0.0",
     "iconv-lite": "^0.4.17",
-    "jsdoc": "^3.4.3",
     "mocha": "^3.2.0",
-    "mermaid.cli": "^0.4.6",
-    "nexe": "^1.1.2",
-    "nwjs": "^1.4.3",
-    "split2": "^2.1.1",
-    "standard": "^11.0.0",
-    "web-ext": "^2.5.0"
+    "split2": "^2.1.1"
   }
 }

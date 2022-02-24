@@ -57,8 +57,8 @@ pre.forEach(filename => {
   vm.runInNewContext(script, sandbox, { filename, displayErrors: true });
 });
 
-for(let key in bootstrap.dependencies) {
-  let version = bootstrap.dependencies[key];
+for(let key in bootstrap.global) {
+  let version = bootstrap.global[key];
   let arg = '';
   if(typeof version === 'object') {
     arg = version.arg;
