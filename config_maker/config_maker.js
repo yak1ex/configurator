@@ -50,7 +50,7 @@ function make_context () {
   let context_base = {
     make_counter, env, is_office, pf32: 'c:\\Program Files'
   };
-  return vm.createContext(context_base)
+  return context_base
 }
 
 const question = (query, opt) => new Promise((resolve, reject) => {
@@ -100,7 +100,7 @@ const origContext = make_context()
   fs.readdirAsync(input).filter(v => v.match(/\.js$/)).mapSeries(async filename => {
 // collect phase
     const script = await fs.readFileAsync(path.join(input, filename))
-    const context = Object.assign(origContext)
+    const context = vm.createContext(Object.assign({}, origContext))
     vm.runInContext(script, context, { filename, displayErrors: true })
     console.log(context)
 
