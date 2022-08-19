@@ -47,7 +47,7 @@ function Invoke-Bootstrap {
     Invoke the latest bootstrap from GitHub
   #>
 
-  iex ((New-Object System.Net.WebClient).DownloadString('https://yak3.myhome.cx/rdr/bootstrap'))
+  iex ((New-Object System.Net.WebClient).DownloadString('https://yak3.mydns.jp/rdr/bootstrap'))
 }
 
 function Request-Head {
