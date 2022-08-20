@@ -799,8 +799,8 @@ $table=@{
     $Both={('-ia', "/D=${pfs}\ToolGUI\notepad++")}
   });
   'svn'=('32', $false, @{32={('-ia', "`"INSTALLDIR=`"`"${pf}\ToolCUI\Subversion`"`"`"")}});
-  'anaconda3'=('Fit', $false, @{
-    $Both={('--params', '/D:c:\usr\local\anaconda3', '--execution-timeout', '3600')}
+  'miniforge3'=('Fit', $false, @{
+    $Both={('--params', '/InstallationType:JustMe')}
   });
   'strawberryperl'=('Fit', $true, @{
     $Both={('-ia', "`"INSTALLDIR=`"`"c:\usr\local\strawberry`"`"`"")}
