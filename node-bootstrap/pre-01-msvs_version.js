@@ -9,7 +9,9 @@ const versions = {
   '110': '2012',
   '120': '2013',
   '140': '2015',
-  '150': '2017'
+  '150': '2017',
+  '160': '2019',
+  '170': '2022'
 };
 if(!(key in versions)) {
   console.error(`Unknown version identifier ${key}`);
