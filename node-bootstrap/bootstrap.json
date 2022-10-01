@@ -4,6 +4,7 @@
     "node": "18.7.0"
   },
   "global": {
+    "@google/clasp": "^2.4.2",
     "canvas": {
       "version": "^2.9.3",
       "arg": "--with_jpeg=true"
