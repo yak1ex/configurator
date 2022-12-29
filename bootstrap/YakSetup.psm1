@@ -383,6 +383,9 @@ $table=@{
     32={('--force', '--params', '"x64=false"', '-ia', "`"INSTALLDIR=`"`"${pf}\Library\Java\jdk`"`"`"")};
     64={('--force', '--params', '"x64=true"', '-ia', "`"INSTALLDIR=`"`"${pf}\Library\Java\jdk`"`"`"")}
   });
+  'temurin'=('Fit', $true, @{
+    $Both={('--params',"/ADDLOCAL=FeatureMain,FeatureEnvironment,FeatureJarFileRunWith /INSTALLDIR=${pf}\Library\Java\jdk")};
+  });
   'git.install'=('Fit', $true, @{
     $Both={('--params', '/GitOnlyOnPath /NoAutoCrlf /WindowsTerminal /NoShellIntegration /WindowsTerminalProfile', '-ia', "`"/DIR=`"`"${pf}\ToolCUI\Git`"`"`"")}
   });
