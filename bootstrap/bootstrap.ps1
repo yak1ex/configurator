@@ -15,6 +15,7 @@ $conf = @(
   ('CMigemo', 'Fit', {param($pf);return "$pf\ToolGUI\afxw"}),
   ('FFmpeg', 'Fit', {param($pf);return "$pf\ToolCUI\ffmpeg"}),
   ('GTK', 'Fit', 'c:\usr\local\gtk2'),
+  ('Hidemaru', 'Fit', {param($pf);return "$pf\ToolGUI\Hidemaru"}),
   ('KeySwap', '32', {param($pf);return "$pf\Utility\keyswap"})
 )
 
@@ -365,6 +366,70 @@ function InstallGtk {
   foreach($key in $spec.Keys) {
     Install-Archive $spec[$key].rver.url $spec[$key].location
     Add-PathEnv ($spec[$key].location+'\bin')
+  }
+}
+
+##########
+# Hidemaru
+
+function GetRVerHidemaru {
+  param($spec)
+
+  $base='https://hide.maruo.co.jp/software/'
+  $html='hidemaru.html'
+  $filter_=@{32='<[aA] [hH][rR][eE][fF]="(bin/hm\d+_signed.exe)">';64='<[aA] [hH][rR][eE][fF]="(bin/hm\d+_x64_signed.exe)">'}
+  $filter=@{}
+  foreach($key in $spec.Keys) {
+    $filter[$key] = $filter_[$key]
+  }
+  $urls=Get-ArchivePath -url "$base$html" -spec $filter -base $base
+  $results=@{}
+  foreach($key in $spec.Keys) {
+    $results[$key]=@{url=$urls[$key]}
+    if($urls[$key] -match "hm(\d)(\d+)_.*exe") {
+      $results[$key].ver=($matches[1]+"."+$matches[2])
+      $results[$key].numver=[int]$matches[1]*100+[int]$matches[2]
+    }
+  }
+  return $results
+}
+
+function GetLVerHidemaru {
+  param($spec)
+
+  $results=@{}
+  foreach($key in $spec.Keys) {
+    If(Test-Path "$($spec[$key].location)\Hidemaru.exe") {
+      $vinfo=[System.Diagnostics.FileVersionInfo]::GetVersionInfo("$($spec[$key].location)\Hidemaru.exe")
+      $results[$key]=@{ver="$($vinfo.ProductMajorPart).$($vinfo.ProductMinorPart)$($vinfo.ProductBuildPart)";numver=($vinfo.ProductMajorPart*100+$vinfo.ProductMinorPart*10+$vinfo.ProductBuildPart)}
+    }
+  }
+  return $results
+}
+
+# TODO: consider keys
+function IsLockedHidemaru {
+  param($spec)
+  $result=@(Get-Process | ? { $_.Name -eq "Hidemaru"}).Count -gt 0
+  return @{32=$result;64=$result}
+}
+
+function InstallHidemaru {
+  param($spec)
+
+  foreach($key in $spec.Keys) {
+    $url=$spec[$key].rver.url
+    $location=$spec[$key].location
+    Echo "Install $url to $location"
+    $tfile=$env:TEMP+'\'+[System.IO.Path]::GetRandomFileName()
+    $tdir=$env:TEMP+'\'+[System.IO.Path]::GetRandomFileName()
+  # Download as a file
+    (New-Object System.Net.WebClient).DownloadFile($url, $tfile)
+  # Extraction
+    & "${env:ChocolateyInstall}\tools\7z.exe" x "$tfile" "-o$tdir" -y
+    & "$tdir\HmSetup.exe" /h /dir "$location"
+    Remove-Item $tfile
+    Remove-Item -Recurse $tdir
   }
 }
 
