@@ -34,7 +34,7 @@ function Select-Menu {
     [parameter(Mandatory=$false)][Int] $default=0
   )
 
-  $choice=[System.Management.Automation.Host.ChoiceDescription[]]($options | % { New-Object System.Management.Automation.Host.ChoiceDescription $_ })
+  $choice=[System.Management.Automation.Host.ChoiceDescription[]]($options | ForEach-Object { New-Object System.Management.Automation.Host.ChoiceDescription $_ })
   return $host.ui.PromptForChoice($title, $message, $choice, $default)
 }
 
@@ -47,7 +47,7 @@ function Invoke-Bootstrap {
     Invoke the latest bootstrap from GitHub
   #>
 
-  iex ((New-Object System.Net.WebClient).DownloadString('https://yak3.mydns.jp/rdr/bootstrap'))
+  Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://yak3.mydns.jp/rdr/bootstrap'))
 }
 
 function Request-Head {
@@ -69,7 +69,7 @@ function Request-Head {
    Get last modified date of the specified URL.
   #>
   param(
-    [parameter(Mandatory=$true)][string] $url=''
+    [parameter(Mandatory=$true)][string] $url
   )
 
 # from https://stackoverflow.com/questions/3268926/head-with-webclient
@@ -143,7 +143,7 @@ function Get-ArchivePath {
     } else {
       $matcher=$spec[$key]
     }
-    if($matcher -ne $null) {
+    if($null -ne $matcher) {
       if($matcher -is "System.Management.Automation.ScriptBlock") {
         $myspec[$key]['matcher'] = $matcher
       } else {
@@ -158,7 +158,7 @@ function Get-ArchivePath {
       $content=(New-Object System.Net.WebClient).DownloadString($cururl)
     }
     $temp=&$myspec[$key]['matcher'] -content $content
-    if($temp -ne $null) {
+    if($null -ne $temp) {
       $result[$key] = ($myspec[$key]['base']+$temp)
     }
   }
@@ -187,7 +187,7 @@ function Install-Archive {
     [string] $url,
     [string] $location
   )
-  Echo "Install $url to $location"
+  Write-Output "Install $url to $location"
   $tfile=$env:TEMP+'\'+[System.IO.Path]::GetRandomFileName()
 # Download as a file
   (New-Object System.Net.WebClient).DownloadFile($url, $tfile)
@@ -216,7 +216,7 @@ function Add-PathEnv {
     [string] $path
   )
   If($env:PATH.split(';') -notcontains $path) {
-    Echo "Append $path to PATH for machine"
+    Write-Output "Append $path to PATH for machine"
     [Environment]::SetEnvironmentVariable("Path", $env:Path+";$path", [System.EnvironmentVariableTarget]::Machine )
   }
 }
@@ -432,7 +432,7 @@ function Cho {
     $targets)
 
   If($targets.Count -eq 0) {
-    $table.GetEnumerator() | sort Name | % Name
+    $table.GetEnumerator() | Sort-Object Name | ForEach-Object Name
   } Else {
     $rargs = $targets.Where{$_ -notin $table.Keys}
     foreach($target in $targets.Where{$_ -in $table.Keys}) {
@@ -441,11 +441,12 @@ function Cho {
       $params=$table[$target][2]
       $bits=(Expand-Bits $type)
       If($reinstall) {
-        echo "choco uninstall $target $rargs"
+        Write-Output "choco uninstall $target $rargs"
         choco uninstall $target $rargs
       }
       foreach($bit in $bits) {
         $pf=(Get-ProgramFiles $bit)
+        [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'pfs', Justification='Prepare for use in $params block')]
         $pfs=(Get-ShortPathFolder $pf)
         If($params.Contains($Both)) {
           $actual_params=&$params[$Both]
@@ -453,10 +454,10 @@ function Cho {
           $actual_params=&$params[$bit]
         }
         If($reinstall) {
-          echo "choco install $target $actual_params $rargs"
+          Write-Output "choco install $target $actual_params $rargs"
           choco install $target @actual_params $rargs
         } Else {
-          echo "choco upgrade $target $actual_params $rargs"
+          Write-Output "choco upgrade $target $actual_params $rargs"
           choco upgrade $target @actual_params $rargs
         }
       }

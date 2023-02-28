@@ -6,7 +6,7 @@
 ############################################################
 
 If(!([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
-  Echo 'You need Administrator rights'
+  Write-Output 'You need Administrator rights'
   Exit
 }
 
@@ -25,7 +25,7 @@ function main {
 
   ######################################################################
   # Install chocolatey, if necessary
-  Echo '[Chocolatey]'
+  Write-Output '[Chocolatey]'
   # Preparation
   $psprofile_dir=(${env:USERPROFILE}+"\Documents\WindowsPowerShell")
   $psprofile_path=($psprofile_dir+"\Microsoft.PowerShell_profile.ps1")
@@ -34,32 +34,32 @@ function main {
   }
   # ref. https://github.com/chocolatey/choco/issues/991
   If(!(Test-Path $psprofile_path) -or (Get-Item $psprofile_path).Length -lt 4) {
-    echo "####" | Out-File -Encoding Default -FilePath $psprofile_path
+    Write-Output "####" | Out-File -Encoding Default -FilePath $psprofile_path
   }
 # TODO: Update chocolatey?
-  If((dir -name env:) -notcontains 'ChocolateyInstall') {
-    iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+  If((Get-ChildItem -name env:) -notcontains 'ChocolateyInstall') {
+    Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
   } else {
-    Echo 'Chocolatey already installed'
+    Write-Output 'Chocolatey already installed'
   }
 
   ######################################################################
   # Install my PS modules
-  $modpath=(${env:PSModulePath}.split(';') | ? {$_ -match 'Users.*WindowsPowerShell' })
+  $modpath=(${env:PSModulePath}.split(';') | Where-Object {$_ -match 'Users.*WindowsPowerShell' })
   $modname='YakSetup'
   If(!(Test-Path $modpath/$modname)) { mkdir $modpath/$modname }
-  Echo $yaksetup_content | Out-File -Encoding Default -FilePath $modpath/$modname/$modname.psm1
-  If((Get-Module -Name $modname) -ne $null) {
+  Write-Output $yaksetup_content | Out-File -Encoding Default -FilePath $modpath/$modname/$modname.psm1
+  If($null -ne (Get-Module -Name $modname)) {
     Remove-Module $modname
   }
   Import-Module $modname
-  Echo "[$modname]"
-  Echo "Install $modname PSmodule"
+  Write-Output "[$modname]"
+  Write-Output "Install $modname PSmodule"
 
   ######################################################################
   # Install non-chocolatey targets
   foreach($item in $conf) {
-    Echo ('['+$item[0]+']')
+    Write-Output ('['+$item[0]+']')
     invoke_helper 'Install' $item
   }
 }
@@ -111,7 +111,7 @@ function invoke_helper {
     $lspec[$key].rver = $rver[$key]
     $lspec[$key].lver = $lver[$key]
     if($rver[$key].numver -gt $lver[$key].numver) {
-      Echo "$($item[0])$key : Remote version $($rver[$key].ver) is newer than local version $($lver[$key].ver)"
+      Write-Output "$($item[0])$key : Remote version $($rver[$key].ver) is newer than local version $($lver[$key].ver)"
       if($verb -eq 'Install') {
         $install=0
         while($install -eq 0 -and $true -eq (invoke_helper_one "IsLocked" $item[0] $lspec)[$key]) {
@@ -126,7 +126,7 @@ function invoke_helper {
       if($verb -eq 'Install') {
         $mes="Skip, $mes"
       }
-      Echo "$mes"
+      Write-Output "$mes"
     }
   }
 }
@@ -183,7 +183,7 @@ function GetLVerAfxw {
 
   $results=@{}
   foreach($key in $spec.Keys) {
-    If((Test-Path "$($spec[$key].location)\AFXW.txt") -and (cat "$($spec[$key].location)\AFXW.txt" | select -index 2) -match 'v(\d+)\.(\d+)') {
+    If((Test-Path "$($spec[$key].location)\AFXW.txt") -and (Get-Content "$($spec[$key].location)\AFXW.txt" | Select-Object -index 2) -match 'v(\d+)\.(\d+)') {
       $results[$key]=@{ver=($matches[1]+"."+$matches[2]);numver=([int]$matches[1]*100+[int]$matches[2])}
     }
   }
@@ -193,7 +193,7 @@ function GetLVerAfxw {
 # TODO: consider keys
 function IsLockedAfxw {
   param($spec)
-  $result=@(Get-Process | ? { $_.Name -eq "afxw"}).Count -gt 0
+  $result=@(Get-Process | Where-Object { $_.Name -eq "afxw"}).Count -gt 0
   return @{32=$result;64=$result}
 }
 
@@ -249,7 +249,7 @@ function GetLVerCMigemo {
 # TODO: consider keys
 function IsLockedCMigemo {
   param($spec)
-  $result=@(Get-Process | ? { $_.Name -eq "afxw"}).Count -gt 0
+  $result=@(Get-Process | Where-Object { $_.Name -eq "afxw"}).Count -gt 0
   return @{32=$result;64=$result}
 }
 
@@ -293,7 +293,7 @@ function GetLVerFFmpeg {
 
   $results=@{}
   foreach($key in $spec.Keys) {
-    If((Test-Path "$($spec[$key].location)\README.txt") -and (cat "$($spec[$key].location)\README.txt" | ? { $_ -match 'Version: \d{4}-\d{2}-\d{2}-git-' } | select -first 1) -match 'Version: ((\d{4}-\d{2}-\d{2})-git-[0-9a-f]+)') {
+    If((Test-Path "$($spec[$key].location)\README.txt") -and (Get-Content "$($spec[$key].location)\README.txt" | Where-Object { $_ -match 'Version: \d{4}-\d{2}-\d{2}-git-' } | Select-Object -first 1) -match 'Version: ((\d{4}-\d{2}-\d{2})-git-[0-9a-f]+)') {
       $results[$key]=@{ver=$matches[1];numver=(NumVer $matches[2] 3 100)}
     }
   }
@@ -347,7 +347,7 @@ function GetLVerGtk {
 
   $results=@{}
   foreach($key in $spec.Keys) {
-    $txt=(ls ($spec[$key].location+"\*.README.txt") | % { $_.Name })
+    $txt=(Get-ChildItem ($spec[$key].location+"\*.README.txt") | ForEach-Object { $_.Name })
     If($txt -match '([^/]*)\.README.txt$') {
       $results[$key]=@{ver=$matches[1]}
       if($txt -match '_([\d.]+)-(\d{8})_') {
@@ -410,7 +410,7 @@ function GetLVerHidemaru {
 # TODO: consider keys
 function IsLockedHidemaru {
   param($spec)
-  $result=@(Get-Process | ? { $_.Name -eq "Hidemaru"}).Count -gt 0
+  $result=@(Get-Process | Where-Object { $_.Name -eq "Hidemaru"}).Count -gt 0
   return @{32=$result;64=$result}
 }
 
@@ -420,7 +420,7 @@ function InstallHidemaru {
   foreach($key in $spec.Keys) {
     $url=$spec[$key].rver.url
     $location=$spec[$key].location
-    Echo "Install $url to $location"
+    Write-Output "Install $url to $location"
     $tfile=$env:TEMP+'\'+[System.IO.Path]::GetRandomFileName()
     $tdir=$env:TEMP+'\'+[System.IO.Path]::GetRandomFileName()
   # Download as a file
@@ -441,7 +441,7 @@ function GetRVerKeySwap32 {
 
   $results=@{}
   $history=(New-Object System.Net.WebClient).DownloadString('http://www.asahi-net.or.jp/~ee7k-nsd/keyswpup.htm')
-  If(($history.Split("`n") | ? { $_ -match "Version \d+\.\d+<BR>" } | select -index 0) -match 'Version (\d+\.\d+)') {
+  If(($history.Split("`n") | Where-Object { $_ -match "Version \d+\.\d+<BR>" } | Select-Object -index 0) -match 'Version (\d+\.\d+)') {
     $results[32]=@{ver=$matches[1];numver=(NumVer $matches[1] 2 100)}
   }
   return $results
@@ -450,7 +450,7 @@ function GetRVerKeySwap32 {
 function GetLVerKeySwap32 {
   param($spec)
   $results=@{}
-  If((cat ($spec.location+"\readme.txt") | Out-String) -match 'KeySwap Ver.(\d+\.\d+)') {
+  If((Get-Content ($spec.location+"\readme.txt") | Out-String) -match 'KeySwap Ver.(\d+\.\d+)') {
     $results[32]=@{ver=$matches[1];numver=(NumVer $matches[1] 2 100)}
   }
   return $results
@@ -505,7 +505,7 @@ function Select-Menu {
     [parameter(Mandatory=$false)][Int] $default=0
   )
 
-  $choice=[System.Management.Automation.Host.ChoiceDescription[]]($options | % { New-Object System.Management.Automation.Host.ChoiceDescription $_ })
+  $choice=[System.Management.Automation.Host.ChoiceDescription[]]($options | ForEach-Object { New-Object System.Management.Automation.Host.ChoiceDescription $_ })
   return $host.ui.PromptForChoice($title, $message, $choice, $default)
 }
 
@@ -518,7 +518,7 @@ function Invoke-Bootstrap {
     Invoke the latest bootstrap from GitHub
   #>
 
-  iex ((New-Object System.Net.WebClient).DownloadString('https://yak3.mydns.jp/rdr/bootstrap'))
+  Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://yak3.mydns.jp/rdr/bootstrap'))
 }
 
 function Request-Head {
@@ -540,7 +540,7 @@ function Request-Head {
    Get last modified date of the specified URL.
   #>
   param(
-    [parameter(Mandatory=$true)][string] $url=''
+    [parameter(Mandatory=$true)][string] $url
   )
 
 # from https://stackoverflow.com/questions/3268926/head-with-webclient
@@ -614,7 +614,7 @@ function Get-ArchivePath {
     } else {
       $matcher=$spec[$key]
     }
-    if($matcher -ne $null) {
+    if($null -ne $matcher) {
       if($matcher -is "System.Management.Automation.ScriptBlock") {
         $myspec[$key]['matcher'] = $matcher
       } else {
@@ -629,7 +629,7 @@ function Get-ArchivePath {
       $content=(New-Object System.Net.WebClient).DownloadString($cururl)
     }
     $temp=&$myspec[$key]['matcher'] -content $content
-    if($temp -ne $null) {
+    if($null -ne $temp) {
       $result[$key] = ($myspec[$key]['base']+$temp)
     }
   }
@@ -658,7 +658,7 @@ function Install-Archive {
     [string] $url,
     [string] $location
   )
-  Echo "Install $url to $location"
+  Write-Output "Install $url to $location"
   $tfile=$env:TEMP+'\'+[System.IO.Path]::GetRandomFileName()
 # Download as a file
   (New-Object System.Net.WebClient).DownloadFile($url, $tfile)
@@ -687,7 +687,7 @@ function Add-PathEnv {
     [string] $path
   )
   If($env:PATH.split(';') -notcontains $path) {
-    Echo "Append $path to PATH for machine"
+    Write-Output "Append $path to PATH for machine"
     [Environment]::SetEnvironmentVariable("Path", $env:Path+";$path", [System.EnvironmentVariableTarget]::Machine )
   }
 }
@@ -903,7 +903,7 @@ function Cho {
     $targets)
 
   If($targets.Count -eq 0) {
-    $table.GetEnumerator() | sort Name | % Name
+    $table.GetEnumerator() | Sort-Object Name | ForEach-Object Name
   } Else {
     $rargs = $targets.Where{$_ -notin $table.Keys}
     foreach($target in $targets.Where{$_ -in $table.Keys}) {
@@ -912,11 +912,12 @@ function Cho {
       $params=$table[$target][2]
       $bits=(Expand-Bits $type)
       If($reinstall) {
-        echo "choco uninstall $target $rargs"
+        Write-Output "choco uninstall $target $rargs"
         choco uninstall $target $rargs
       }
       foreach($bit in $bits) {
         $pf=(Get-ProgramFiles $bit)
+        [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'pfs', Justification='Prepare for use in $params block')]
         $pfs=(Get-ShortPathFolder $pf)
         If($params.Contains($Both)) {
           $actual_params=&$params[$Both]
@@ -924,10 +925,10 @@ function Cho {
           $actual_params=&$params[$bit]
         }
         If($reinstall) {
-          echo "choco install $target $actual_params $rargs"
+          Write-Output "choco install $target $actual_params $rargs"
           choco install $target @actual_params $rargs
         } Else {
-          echo "choco upgrade $target $actual_params $rargs"
+          Write-Output "choco upgrade $target $actual_params $rargs"
           choco upgrade $target @actual_params $rargs
         }
       }
