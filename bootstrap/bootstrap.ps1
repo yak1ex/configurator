@@ -815,6 +815,114 @@ function Get-ConfigPlace {
   return @{'DNJP'='Office';'ADJECTIVE'='Home'}[$env:USERDOMAIN]
 }
 
+# ref. https://stackoverflow.com/questions/40348069/export-powershell-5-enum-declaration-from-a-module
+$enum_types = @"
+public enum PESubsystem {
+  WindowsGUI = 2,
+  WindowsCUI = 3
+}
+"@
+
+# ref. https://stackoverflow.com/questions/25730978/powershell-add-type-cannot-add-type-already-exist
+if (-not ("PESubsystem" -as [type])) {
+  Add-Type $enum_types
+}
+
+function HandlePESubsystem {
+  <#
+   .Synopsis
+    Set Subsystem information to a PE executable
+
+   .Description
+    Set Subsystem information to a PE executable
+
+   .Parameter Path
+    Path to a PE executable. Mandatory parameter.
+
+   .Parameter Subsystem
+    Specify new subsystem value
+    [PESubsystem]
+    WindowsGUI(2)
+    WindowsCUI(3)
+
+   .Outputs
+    Return old subsystem value
+    [PESubsystem]
+    WindowsGUI(2)
+    WindowsCUI(3)
+
+   .Example
+    HandlePESubsytem "C:\\Windows\\explorer.exe" [PESubsystem]::WindowsGUI
+  #>
+  param([Parameter(Mandatory=$true)]$path, [AllowNull()][Nullable[PESubsystem]]$new_subsystem)
+  $file_bytes = [System.IO.File]::ReadAllBytes($path)
+  $pe_offset = [System.BitConverter]::ToUInt32($file_bytes, 0x3c)
+  $signature = [System.Text.Encoding]::ASCII.GetString($file_bytes, $pe_offset, 4)
+  if ($signature -ne "PE`0`0") {
+    throw "Not PE executable"
+  }
+  #$optional_header_magic = [System.BitConverter]::ToUInt16($file_bytes, $pe_offset + 24)
+  $subsystem_offset = $pe_offset + 24 + 68
+  $old_subsystem = [System.BitConverter]::ToInt16($file_bytes, $subsystem_offset)
+  if ($null -ne $subsystem) {
+    [System.Buffer]::BlockCopy([System.BitConverter]::GetBytes([uint16]$new_subsystem), 0, $file_bytes, $subsystem_offset, 2)
+    [System.IO.File]::WriteAllBytes($path, $file_bytes)
+  }
+  return [PESubsystem]$old_subsystem
+}
+
+function Get-PESubsystem {
+  <#
+   .Synopsis
+    Get Subsystem information from a PE executable
+
+   .Description
+    Get Subsystem information from a PE executable
+
+   .Parameter Path
+    Path to a PE executable. Mandatory parameter.
+
+   .OUtputs
+    Integer(PESubsystem)
+    WindowsGUI(2)
+    WindowsCUI(3)
+
+   .Example
+    GetPESubsytem "C:\\Windows\\explorer.exe"
+  #>
+  param([Parameter(Mandatory=$true)]$path)
+  return HandlePESubsystem $path
+}
+
+function Set-PESubsystem {
+  <#
+   .Synopsis
+    Set Subsystem information to a PE executable
+
+    .Description
+    Get Subsystem information to a PE executable
+
+   .Parameter Path
+    Path to a PE executable. Mandatory parameter.
+
+   .Parameter Subsystem
+    Specify new subsystem value. Mandatory parameter.
+    [PESubsystem]
+    WindowsGUI(2)
+    WindowsCUI(3)
+
+   .OUtputs
+    [PESubsystem]
+    WindowsGUI(2)
+    WindowsCUI(3)
+
+   .Example
+    GetPESubsytem "C:\\Windows\\explorer.exe"
+  #>
+  param([Parameter(Mandatory=$true)]$path, [Parameter(Mandatory=$true)][PESubsystem]$subsystem)
+  return HandlePESubsystem $path $subsystem
+}
+
 function Expand-Bits {
   <#
    .Synopsis
@@ -936,7 +1044,7 @@ function Cho {
   }
 }
 
-Export-ModuleMember -function Select-Menu, Invoke-Bootstrap, Request-Head, Get-ArchivePath, Install-Archive, Add-PathEnv, Test-64BitEnv, Test-64BitProcess, Test-Admin, Get-ProgramFiles, Get-ConfigPlace, Expand-Bits, Cho
+Export-ModuleMember -function Select-Menu, Invoke-Bootstrap, Request-Head, Get-ArchivePath, Install-Archive, Add-PathEnv, Test-64BitEnv, Test-64BitProcess, Test-Admin, Get-ProgramFiles, Get-ConfigPlace, Get-PESubsystem, Set-PESubsystem, Expand-Bits, Cho
 '@
 
 ############################################################
