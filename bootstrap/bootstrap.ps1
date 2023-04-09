@@ -1,15 +1,6 @@
 # Invoke as the following:
 # Set-ExecutionPolicy Bypass -Scope Process -Force;iex ((New-Object System.Net.WebClient).DownloadString('https://yak3.mydns.jp/rdr/bootstrap'))
 
-############################################################
-# Admin check
-############################################################
-
-If(!([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
-  Write-Output 'You need Administrator rights'
-  Exit
-}
-
 $conf = @(
   ('Afxw', 'Fit', {param($pf);return "$pf\ToolGUI\afxw"}),
   ('CMigemo', 'Fit', {param($pf);return "$pf\ToolGUI\afxw"}),
@@ -24,23 +15,12 @@ function main {
   param($yaksetup_content)
 
   ######################################################################
-  # Install chocolatey, if necessary
-  Write-Output '[Chocolatey]'
-  # Preparation
-  $psprofile_dir=(${env:USERPROFILE}+"\Documents\WindowsPowerShell")
-  $psprofile_path=($psprofile_dir+"\Microsoft.PowerShell_profile.ps1")
-  If(!(Test-Path $psprofile_dir)) {
-    mkdir $psprofile_dir
-  }
-  # ref. https://github.com/chocolatey/choco/issues/991
-  If(!(Test-Path $psprofile_path) -or (Get-Item $psprofile_path).Length -lt 4) {
-    Write-Output "####" | Out-File -Encoding Default -FilePath $psprofile_path
-  }
-# TODO: Update chocolatey?
-  If((Get-ChildItem -name env:) -notcontains 'ChocolateyInstall') {
-    Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+  # Install Scoop, if necessary
+  Write-Output '[Scoop]'
+  If(-not (Get-Command "scoop")) {
+    Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
   } else {
-    Write-Output 'Chocolatey already installed'
+    Write-Output 'Scoop already installed'
   }
 
   ######################################################################
