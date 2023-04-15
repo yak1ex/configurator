@@ -1,5 +1,5 @@
 # Invoke as the following:
-# Set-ExecutionPolicy Bypass -Scope Process -Force;iex ((New-Object System.Net.WebClient).DownloadString('https://yak3.mydns.jp/rdr/bootstrap'))
+# Set-ExecutionPolicy Bypass -Scope Process -Force;iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/yak1ex/configurator/master/bootstrap/bootstrap.ps1'))
 
 $conf = @(
   ('Afxw', 'Fit', {param($pf);return "$pf\ToolGUI\afxw"}),
