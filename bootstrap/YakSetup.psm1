@@ -451,5 +451,3 @@ function Set-PESubsystem {
   param([Parameter(Mandatory=$true)]$path, [Parameter(Mandatory=$true)][PESubsystem]$subsystem)
   return HandlePESubsystem $path $subsystem
 }
-
-Export-ModuleMember -function Select-Menu, Invoke-Bootstrap, Request-Head, Get-ArchivePath, Install-Archive, Add-PathEnv, Test-64BitEnv, Test-64BitProcess, Test-Admin, Get-ProgramFiles, Get-ConfigPlace, Get-PESubsystem, Set-PESubsystem
