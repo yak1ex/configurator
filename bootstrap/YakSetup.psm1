@@ -172,7 +172,7 @@ function Install-Archive {
 
    .Description
     Extract contents of the specified archive to the specified location.
-    This function uses 7z.exe installed by Chocolatey.
+    This function uses 7z.exe installed by Scoop.
 
    .Parameter Url
     The URL of the installing archive
@@ -183,17 +183,24 @@ function Install-Archive {
    .Example
     Install-Archive 'http://akt.d.dooo.jp/lzh/afxw32_161.zip' "${env:ProgramFiles}\ToolGUI\afxw"
   #>
+  [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSPossibleIncorrectUsageOfRedirectionOperator', '',
+    Target='$null',
+    Justification='Actual redirect operator'
+  )]
   param(
     [string] $url,
     [string] $location
   )
-  Write-Output "Install $url to $location"
-  $tfile=$env:TEMP+'\'+[System.IO.Path]::GetRandomFileName()
+  if ((Get-Command scoop) -and ($7z = (scoop which 7z 6>$null))) {
+    Write-Output "Install $url to $location"
+    $tfile=$env:TEMP+'\'+[System.IO.Path]::GetRandomFileName()
 # Download as a file
-  (New-Object System.Net.WebClient).DownloadFile($url, $tfile)
+    (New-Object System.Net.WebClient).DownloadFile($url, $tfile)
 # Extraction
-  & "${env:ChocolateyInstall}\tools\7z.exe" x "$tfile" "-o$location" -y
-  Remove-Item $tfile
+    & "$7z" x "$tfile" "-o$location" -y
+    Remove-Item $tfile
+  }
 }
 
 function Add-PathEnv {
