@@ -458,3 +458,39 @@ function Set-PESubsystem {
   param([Parameter(Mandatory=$true)]$path, [Parameter(Mandatory=$true)][PESubsystem]$subsystem)
   return HandlePESubsystem $path $subsystem
 }
+
+function Switch-ShimPESubsystem {
+  <#
+   .Synopsis
+    Adjust a PE subsystem value for Scoop shims along to a shim-ed executable.
+
+   .Description
+    Adjust a PE subsystem value for Scoop shims along to a shim-ed executable.
+    It is assumed that Scoop is installed into the default location.
+
+   .Example
+    Switch-ShimPESubsytem
+  #>
+
+  $shim_dir = "${env:USERPROFILE}\scoop\shims"
+  Get-Item "${shim_dir}\*.shim" | ForEach-Object {
+    $base = ($_.Name -replace ".shim$","")
+    $shim_path = "$shim_dir\\$base.exe"
+    if ((Get-Content "${shim_dir}\$base.shim") -match "path = `"(.*)`"") {
+      $exe_path = $Matches[1]
+      try {
+        $exe_subsys = Get-PESubsystem $exe_path
+        $shim_subsys = Get-PESubsystem $shim_path
+        if ( $exe_subsys -ne $shim_subsys ) {
+          Write-Host $shim_path "from" $shim_subsys "to" $exe_subsys
+          Set-PESubsystem $shim_path $exe_subsys | Out-Null
+        }
+      } catch {
+        if ( $PSItem -ne "Not PE executable" ) {
+          Write-Host $exe_path
+          throw
+        }
+      }
+    }
+  }
+}

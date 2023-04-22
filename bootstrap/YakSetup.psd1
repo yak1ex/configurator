@@ -77,7 +77,7 @@ FunctionsToExport = @(
     'Add-PathEnv',
     'Test-64BitEnv', 'Test-64BitProcess', 'Test-Admin',
     'Get-ProgramFiles', 'Get-ConfigPlace',
-    'Get-PESubsystem', 'Set-PESubsystem'
+    'Get-PESubsystem', 'Set-PESubsystem', 'Switch-ShimPESubsystem'
 )
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
