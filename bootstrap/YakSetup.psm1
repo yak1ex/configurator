@@ -494,3 +494,35 @@ function Switch-ShimPESubsystem {
     }
   }
 }
+
+function Get-GitHubCommitDate
+{
+  <#
+   .Synopsis
+    Get commit date of specified GitHub content.
+
+   .Description
+    Get commit date of specified GitHub content.
+    Return a DateTime object.
+
+   .Parameter Author
+    String. Target repository author.
+
+   .Parameter Repo
+    String. Target repository name.
+
+   .Parameter Path
+    String. Target path relative to repository root. No need to URL-encode.
+
+   .Outputs
+    DateTime. This is a committer date, not a author date.
+
+   .Example
+    Get-GitHubCommitDate yak1ex configurator bootstrap/YakSetup.psm1
+  #>
+  param($author, $repo, $path)
+
+  $encoded_path = [System.Web.HttpUtility]::UrlEncode($path)
+  $url = "https://api.github.com/repos/$author/$repo/commits?path=${encoded_path}&page=1&per_page=1"
+  return [DateTime](Invoke-RestMethod $url)[0].commit.committer.date
+}

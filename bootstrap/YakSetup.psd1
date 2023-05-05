@@ -12,7 +12,7 @@
 RootModule = 'YakSetup.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.0.1'
+ModuleVersion = '0.0.2'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -54,7 +54,7 @@ Copyright = 'Written by Yak!'
 # RequiredModules = @()
 
 # Assemblies that must be loaded prior to importing this module
-# RequiredAssemblies = @()
+RequiredAssemblies = @('System.Web')
 
 # Script files (.ps1) that are run in the caller's environment prior to importing this module.
 # ScriptsToProcess = @()
@@ -77,7 +77,8 @@ FunctionsToExport = @(
     'Add-PathEnv',
     'Test-64BitEnv', 'Test-64BitProcess', 'Test-Admin',
     'Get-ProgramFiles', 'Get-ConfigPlace',
-    'Get-PESubsystem', 'Set-PESubsystem', 'Switch-ShimPESubsystem'
+    'Get-PESubsystem', 'Set-PESubsystem', 'Switch-ShimPESubsystem',
+    'Get-GitHubCommitDate'
 )
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
