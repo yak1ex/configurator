@@ -41,6 +41,11 @@ function main {
     if (-not (Test-Path -Path "$dir/$scoopfile" -NewerThan $date)) {
       Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$author/$repo/master/$path/$scoopfile" -OutFile "$dir/$scoopfile"
       scoop import "$dir/$scoopfile"
+      $json = Get-Content "$dir/$scoopfile" | ConvertFrom-Json
+      if ($json.post_install) {
+        Write-Host "Running post_install script..."
+        Invoke-Command ([scriptblock]::Create($json.post_install -join "`r`n"))
+      }
     } else {
       Write-Host "$dir/$scoopfile is the latest, skip import"
     }
