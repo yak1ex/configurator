@@ -6,16 +6,16 @@ function main {
 
   ######################################################################
   # Install Scoop, if necessary
-  Write-Output '[Scoop]'
+  Write-Host -ForegroundColor DarkCyan '[Scoop]'
   If(-not (Get-Command "scoop")) {
     Invoke-Expression (New-Object System.Net.WebClient).DownloadString($options.ScoopUrl)
   } else {
-    Write-Output 'Scoop already installed'
+    Write-Host -ForegroundColor DarkGray "'Scoop' already installed."
   }
 
   ######################################################################
   # Install my PS modules
-  Write-Output "[$($options.ModuleName)]"
+  Write-Host -ForegroundColor DarkCyan "[$($options.ModuleName)]"
   scoop bucket add $options.BucketName $options.BucketUrl
   scoop install $options.ModuleName.toLower()
   scoop update $options.ModuleName.toLower()
@@ -31,11 +31,11 @@ function main {
   $author, $repo, $path = $options.ScoopFileDir
   $options.BaseScoopFile, (Get-ConfigPlace) | ForEach-Object {
     $scoopfile = "scoopfile.$($_.toLower()).json"
-    Write-Host "[$scoopfile]"
+    Write-Host -ForegroundColor DarkCyan "[$scoopfile]"
     try {
       $date = Get-GitHubCommitDate $author $repo "$path/$scoopfile"
     } catch {
-      Write-Host "$scoopfile does not exist on GitHub"
+      Write-Host -ForegroundColor DarkYellow "WARN  '$scoopfile' does not exist on GitHub."
       return
     }
     if (-not (Test-Path -Path "$dir/$scoopfile" -NewerThan $date)) {
@@ -47,7 +47,7 @@ function main {
         Invoke-Command ([scriptblock]::Create($json.post_install -join "`r`n"))
       }
     } else {
-      Write-Host "$dir/$scoopfile is the latest, skip import"
+      Write-Host -ForegroundColor DarkGray "'$dir/$scoopfile' is the latest, skip import."
     }
   }
 }
