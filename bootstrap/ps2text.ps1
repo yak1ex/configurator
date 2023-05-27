@@ -1,0 +1,1 @@
+(Get-Content $args[0]) -replace '\\','\\' -replace '"','\"' -replace '^','"' -replace '$','",'
