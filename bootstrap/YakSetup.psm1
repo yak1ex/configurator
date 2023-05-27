@@ -526,3 +526,30 @@ function Get-GitHubCommitDate
   $url = "https://api.github.com/repos/$author/$repo/commits?path=${encoded_path}&page=1&per_page=1"
   return [DateTime](Invoke-RestMethod $url)[0].commit.committer.date
 }
+
+# https://serverfault.com/questions/11879/gaining-administrator-privileges-in-powershell
+function Invoke-Elevated
+{
+  <#
+   .Synopsis
+    Invoke script with administrator right.
+
+   .Description
+    Invoke script with administrator right.
+
+   .Parameter NoExit
+    Boolean. New PowerShell session is not exited if specified.
+
+   .Parameter ScriptBlock
+    ScriptBlock. A script block invoked with administrator right.
+
+   .Example
+    Invoke-Elevated -NoExit -ScriptBlock { Write-Host }
+  #>
+  param(
+    [switch]$NoExit,
+    [Parameter(Mandatory=$true)][scriptblock]$ScriptBlock
+  )
+  $sh = new-object -com 'Shell.Application'
+  $sh.ShellExecute('powershell', "$(if ($NoExit) {'-NoExit '})-Command $Script", '', 'runas')
+}
