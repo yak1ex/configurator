@@ -115,6 +115,19 @@
       "Name": "yaksetup"
     }
   ],
+  "pre_install": [
+    "# for mambaforge, enable long paths, if necessary ",
+    "if (-not (Get-ItemProperty -Path registry::HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem).LongPathsEnabled) {",
+    "  $temp = New-TemporaryFile",
+    "  $reg = $temp.FullName -replace '.tmp$', '.reg'",
+    "  \"Windows Registry Editor Version 5.00\" | Out-File $reg",
+    "  \"\" | Out-File $reg -Append",
+    "  \"[HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\FileSystem]\" | Out-File $reg -Append",
+    "  \"`\"LongPathsEnabled`\"=dword:00000001\" | Out-File $reg -Append",
+    "  &$reg",
+    "  Remove-Item $reg",
+    "}"
+  ],
   "post_install": [
     "if(-not (Test-Path -Path Registry::HKEY_CURRENT_USER\\Software\\Classes\\Applications\\Hidemaru.exe)) {",
     "  &\"$env:USERPROFILE\\scoop\\apps\\hidemaru\\current\\install-file-associations.reg\"",
