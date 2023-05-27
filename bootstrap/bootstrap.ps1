@@ -54,6 +54,10 @@ function main {
       Write-Host -ForegroundColor DarkGray "'$dir/$scoopfile' is the latest, skip import."
     }
   }
+
+  ######################################################################
+  # Adjust after import
+  Switch-ShimPESubsystem
 }
 
 ############################################################
