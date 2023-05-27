@@ -475,7 +475,7 @@ function Switch-ShimPESubsystem {
   $shim_dir = "${env:USERPROFILE}\scoop\shims"
   Get-Item "${shim_dir}\*.shim" | ForEach-Object {
     $base = ($_.Name -replace ".shim$","")
-    $shim_path = "$shim_dir\\$base.exe"
+    $shim_path = "$shim_dir\$base.exe"
     if ((Get-Content "${shim_dir}\$base.shim") -match "path = `"(.*)`"") {
       $exe_path = $Matches[1]
       try {
