@@ -553,3 +553,71 @@ function Invoke-Elevated
   $sh = new-object -com 'Shell.Application'
   $sh.ShellExecute('powershell', "$(if ($NoExit) {'-NoExit '})-Command $Script", '', 'runas')
 }
+
+function Compress-ProcessMitigation
+{
+  <#
+   .Synopsis
+    Remove process mitigation entries for no longer existing executables.
+
+   .Description
+    Remove process mitigation entries for no longer existing executables.
+    Only effective for entries with FilterFullPath.
+    Admin rights are required.
+
+   .Example
+    Compress-ProcessMitigation
+  #>
+
+  if(Test-Admin) {
+    Get-ChildItem -Path 'registry::HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\' `
+    | ForEach-Object {
+        $key='registry::'+$_.Name
+        if((Get-Item -LiteralPath $key).Property -contains 'UseFilter') {
+            Get-ChildItem -LiteralPath ('registry::'+$_.Name) | ForEach-Object {
+                $subkey='registry::'+$_.Name
+                if($_.Property -contains 'FilterFullPath') {
+                    $filterpath = (Get-ItemProperty -LiteralPath $subkey -Name 'FilterFullPath').FilterFullPath
+                    if(-not(Test-Path -LiteralPath $filterpath)) {
+                        Write-Host "Remove the entry for the missing $filterpath"
+                        Remove-Item -LiteralPath $subkey
+                    }
+                }
+            }
+            if($_.SubKeyCount -eq 0) {
+                Write-Host "Remove the entry for $key"
+                Remove-Item -LiteralPath $key
+            }
+        }
+    }
+  } else {
+    Write-Host 'Admin rights are required'
+  }
+}
+
+function Add-ASLRProcessMitigation
+{
+  <#
+   .Synopsis
+    Add ASLR process mitigation for executables in the specified folders.
+
+   .Description
+    Add ASLR process mitigation for executables in the specified folders.
+    .exe files are searched in the specified folders recursively.
+    Admin rights are required.
+
+   .Example
+    Add-ASLRProcessMitigation c:\cygwin64\bin
+  #>
+  param([Parameter(Mandatory=$true)][string[]]$path)
+  if(Test-Admin) {
+    $path | ForEach-Object {
+    Get-ChildItem -Path ($_+'\*.exe') -Recurse | ForEach-Object {
+        Write-Host "ASLR disabled: $($_.FullName)"
+        Set-ProcessMitigation -Name $_.FullName -Disable ForceRelocateImages
+    }
+  }
+  } else {
+    Write-Host 'Admin rights are required'
+  }
+}

@@ -12,7 +12,7 @@
 RootModule = 'YakSetup.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.0.2'
+ModuleVersion = '0.1.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -78,7 +78,8 @@ FunctionsToExport = @(
     'Test-64BitEnv', 'Test-64BitProcess', 'Test-Admin',
     'Get-ProgramFiles', 'Get-ConfigPlace',
     'Get-PESubsystem', 'Set-PESubsystem', 'Switch-ShimPESubsystem',
-    'Get-GitHubCommitDate'
+    'Get-GitHubCommitDate',
+    'Compress-ProcessMitigation', 'Add-ASLRProcessMitigation'
 )
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
