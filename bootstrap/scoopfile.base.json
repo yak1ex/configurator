@@ -61,6 +61,11 @@
     {
       "Info": "",
       "Source": "main",
+      "Name": "ffmpeg"
+    },
+    {
+      "Info": "",
+      "Source": "main",
       "Name": "git"
     },
     {
