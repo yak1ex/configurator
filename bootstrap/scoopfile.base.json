@@ -61,6 +61,11 @@
     {
       "Info": "",
       "Source": "main",
+      "Name": "dark"
+    },
+    {
+      "Info": "",
+      "Source": "main",
       "Name": "ffmpeg"
     },
     {
@@ -107,6 +112,11 @@
       "Info": "",
       "Source": "main",
       "Name": "nvm"
+    },
+    {
+      "Info": "",
+      "Source": "extras",
+      "Name": "powertoys"
     },
     {
       "Info": "",
