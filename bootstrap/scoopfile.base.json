@@ -148,7 +148,7 @@
     "  \"\" | Out-File $reg -Append",
     "  \"[HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\FileSystem]\" | Out-File $reg -Append",
     "  \"`\"LongPathsEnabled`\"=dword:00000001\" | Out-File $reg -Append",
-    "  &$reg",
+    "  Start-Process -Wait $reg",
     "  Remove-Item $reg",
     "}"
   ],
