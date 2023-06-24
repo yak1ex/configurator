@@ -79,6 +79,7 @@ FunctionsToExport = @(
     'Get-ProgramFiles', 'Get-ConfigPlace',
     'Get-PESubsystem', 'Set-PESubsystem', 'Switch-ShimPESubsystem',
     'Get-GitHubCommitDate',
+    'Invoke-Elevated',
     'Compress-ProcessMitigation', 'Add-ASLRProcessMitigation'
 )
 
