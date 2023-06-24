@@ -459,7 +459,7 @@ function Set-PESubsystem {
   return HandlePESubsystem $path $subsystem
 }
 
-function Switch-ShimPESubsystem {
+function Sync-ShimPESubsystem {
   <#
    .Synopsis
     Adjust a PE subsystem value for Scoop shims along to a shim-ed executable.
@@ -469,7 +469,7 @@ function Switch-ShimPESubsystem {
     It is assumed that Scoop is installed into the default location.
 
    .Example
-    Switch-ShimPESubsytem
+    Sync-ShimPESubsytem
   #>
 
   $shim_dir = "${env:USERPROFILE}\scoop\shims"

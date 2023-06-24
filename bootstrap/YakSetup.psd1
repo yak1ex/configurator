@@ -77,7 +77,7 @@ FunctionsToExport = @(
     'Add-PathEnv',
     'Test-64BitEnv', 'Test-64BitProcess', 'Test-Admin',
     'Get-ProgramFiles', 'Get-ConfigPlace',
-    'Get-PESubsystem', 'Set-PESubsystem', 'Switch-ShimPESubsystem',
+    'Get-PESubsystem', 'Set-PESubsystem', 'Sync-ShimPESubsystem',
     'Get-GitHubCommitDate',
     'Invoke-Elevated',
     'Compress-ProcessMitigation', 'Add-ASLRProcessMitigation'
