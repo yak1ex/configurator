@@ -5,5 +5,7 @@ if (dllPath === null) {
   console.log(`${dll} is not found`)
 } else {
   const libjpegTurboPrefix = path.dirname(dllPath)
-  exec(`npm config set jpeg_root=${path.normalize(libjpegTurboPrefix).replaceAll('\\', '/')}`)
+  jpeg_root = path.normalize(libjpegTurboPrefix).replaceAll('\\', '/')
+  process.env["npm_config_jpeg_root"] = jpeg_root
+  console.log(`env:npm_config_jpeg_root=${jpeg_root}`)
 }
