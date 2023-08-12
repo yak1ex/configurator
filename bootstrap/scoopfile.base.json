@@ -155,6 +155,17 @@
   "post_install": [
     "if(-not (Test-Path -Path Registry::HKEY_CURRENT_USER\\Software\\Classes\\Applications\\Hidemaru.exe)) {",
     "  reg.exe import \"$env:USERPROFILE\\scoop\\apps\\hidemaru\\current\\install-file-associations.reg\"",
+    "}",
+    "if(-not (Test-Path -Path HKCU\\Software\\Classes\\SystemFileAssociations\\image\\OpenWithList\\i_view64.exe)) {",
+    "  New-Item -Path HKCU:\\SOFTWARE\\Classes\\Applications\\i_view64.exe\\shell\\open\\command -Force | Out-Null",
+    "  Set-ItemProperty -Path HKCU:\\SOFTWARE\\Classes\\Applications\\i_view64.exe\\shell\\open\\command -Name \"(default)\" -Value \"`\"$(scoop prefix irfanview)\\i_view64.exe`\" `\"%1`\"\"",
+    "  New-Item -Path HKCU:\\SOFTWARE\\Classes\\SystemFileAssociations\\image\\OpenWithList\\i_view64.exe -Force | Out-Null",
+    "}",
+    "if(-not (Test-Path -Path HKCU\\Software\\Classes\\SystemFileAssociations\\video\\OpenWithList\\mpc-hc64.exe)) {",
+    "  New-Item -Path HKCU:\\SOFTWARE\\Classes\\Applications\\mpc-hc64.exe\\shell\\open\\command -Force | Out-Null",
+    "  Set-ItemProperty -Path HKCU:\\SOFTWARE\\Classes\\Applications\\mpc-hc64.exe\\shell\\open\\command -Name \"(default)\" -Value \"`\"$(scoop prefix mpc-hc-fork)\\mpc-hc64.exe`\" `\"%1`\"\"",
+    "  New-Item -Path HKCU:\\SOFTWARE\\Classes\\SystemFileAssociations\\video\\OpenWithList\\mpc-hc64.exe -Force | Out-Null",
+    "  New-Item -Path HKCU:\\SOFTWARE\\Classes\\SystemFileAssociations\\audio\\OpenWithList\\mpc-hc64.exe -Force | Out-Null",
     "}"
   ]
 }
