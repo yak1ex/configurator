@@ -14,6 +14,20 @@ function main {
   }
 
   ######################################################################
+  # Install VS Code, if necessary
+  Write-Host -ForegroundColor DarkCyan '[VS Code]'
+  if(-not (Get-Command code |Select-Object Source) -match 'Microsoft VS Code') {
+    $temp = New-TemporaryFile
+    $dest = ([System.IO.Path]::GetDirectoryName($temp.FullName) +'\' + [System.IO.Path]::GetFileNameWithoutExtension($temp.FullName) +'.exe')
+    Remove-Item $temp
+    Invoke-WebRequest -Uri "https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-user" -OutFile $dest
+    &$dest /VERYSILENT /NORESTART /MERGETASKS=!runcode,addcontextmenufiles,addcontextmenufolders,associatewithfiles,addtopath
+    Remove-Item $dest
+  } else {
+    Write-Host -ForegroundColor DarkGray "'VS Code' already installed."
+  }
+
+  ######################################################################
   # Install my PS modules
   Write-Host -ForegroundColor DarkCyan "[$($options.ModuleName)]"
   scoop bucket add $options.BucketName $options.BucketUrl
