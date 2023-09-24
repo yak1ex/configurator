@@ -30,6 +30,7 @@ function main {
   ######################################################################
   # Install my PS modules
   Write-Host -ForegroundColor DarkCyan "[$($options.ModuleName)]"
+  scoop install git
   scoop bucket add $options.BucketName $options.BucketUrl
   scoop install $options.ModuleName.toLower()
   scoop update $options.ModuleName.toLower()
