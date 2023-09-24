@@ -7,7 +7,7 @@ function main {
   ######################################################################
   # Install Scoop, if necessary
   Write-Host -ForegroundColor DarkCyan '[Scoop]'
-  If(-not (Get-Command "scoop")) {
+  If(-not (Get-Command "scoop" -ErrorAction SilentlyContinue)) {
     Invoke-Expression (New-Object System.Net.WebClient).DownloadString($options.ScoopUrl)
   } else {
     Write-Host -ForegroundColor DarkGray "'Scoop' already installed."
@@ -16,7 +16,7 @@ function main {
   ######################################################################
   # Install VS Code, if necessary
   Write-Host -ForegroundColor DarkCyan '[VS Code]'
-  if(-not (Get-Command code |Select-Object Source) -match 'Microsoft VS Code') {
+  if(-not ((Get-Command code -ErrorAction SilentlyContinue|Select-Object Source) -match 'Microsoft VS Code')) {
     $temp = New-TemporaryFile
     $dest = ([System.IO.Path]::GetDirectoryName($temp.FullName) +'\' + [System.IO.Path]::GetFileNameWithoutExtension($temp.FullName) +'.exe')
     Remove-Item $temp
