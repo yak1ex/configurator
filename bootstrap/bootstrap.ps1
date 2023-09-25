@@ -72,7 +72,7 @@ function main {
 
   ######################################################################
   # Adjust after import
-  Switch-ShimPESubsystem
+  Sync-ShimPESubsystem
 }
 
 ############################################################
