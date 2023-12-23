@@ -21,7 +21,6 @@
   },
   "common": {
     "@napi-rs/canvas": "^0.1.41",
-    "bluebird": "^3.7.2",
     "chai": "^4.3.7",
     "command-line-args": "^5.2.1",
     "command-line-usage": "^7.0.1",
