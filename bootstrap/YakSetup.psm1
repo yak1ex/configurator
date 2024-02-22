@@ -551,7 +551,7 @@ function Invoke-Elevated
     [Parameter(Mandatory=$true)][scriptblock]$ScriptBlock
   )
   $sh = new-object -com 'Shell.Application'
-  $sh.ShellExecute('powershell', "$(if ($NoExit) {'-NoExit '})-Command $Script", '', 'runas')
+  $sh.ShellExecute('powershell', "$(if ($NoExit) {'-NoExit '})-Command $ScriptBlock", '', 'runas')
 }
 
 function Compress-ProcessMitigation
