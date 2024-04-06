@@ -98,10 +98,15 @@
       "Source": "main",
       "Name": "jq"
     },
-    {
+     {
       "Info": "",
       "Source": "extras",
       "Name": "mambaforge"
+    },
+    {
+      "Info": "",
+      "Source": "extras",
+      "Name": "manictime"
     },
     {
       "Info": "",
