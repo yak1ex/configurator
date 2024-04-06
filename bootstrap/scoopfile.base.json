@@ -65,6 +65,11 @@
     },
     {
       "Info": "",
+      "Source": "yak1ex",
+      "Name": "firefilecopy"
+    },
+    {
+      "Info": "",
       "Source": "main",
       "Name": "ffmpeg"
     },
