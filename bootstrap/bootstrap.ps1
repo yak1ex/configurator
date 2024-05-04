@@ -21,7 +21,7 @@ function main {
     $dest = ([System.IO.Path]::GetDirectoryName($temp.FullName) +'\' + [System.IO.Path]::GetFileNameWithoutExtension($temp.FullName) +'.exe')
     Remove-Item $temp
     Invoke-WebRequest -Uri "https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-user" -OutFile $dest
-    &$dest /VERYSILENT /NORESTART /MERGETASKS=!runcode,addcontextmenufiles,addcontextmenufolders,associatewithfiles,addtopath
+    Start-Process -Wait -FilePath $dest -ArgumentList "/VERYSILENT","/NORESTART","/MERGETASKS=!runcode,addcontextmenufiles,addcontextmenufolders,associatewithfiles,addtopath"
     Remove-Item $dest
   } else {
     Write-Host -ForegroundColor DarkGray "'VS Code' already installed."
