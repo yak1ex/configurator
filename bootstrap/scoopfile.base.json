@@ -192,18 +192,21 @@
       "    }",
       "}",
       "\"@",
-      "echo $ahk | autohotkey.exe *",
-    ],
+      "echo $ahk | autohotkey.exe *"
+    ]
   },
   "post_update": {
     "autohotkey": [
       "$startup=\"$env:APPDATA\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\"",
       "Get-ChildItem $startup |",
       "  Where-Object {$_.Name -match \"\\.ahk\\.\"} |",
-      "  ForEach-Object { & \"$startup\\$($_.Name)\" }",
+      "  ForEach-Object { & \"$startup\\$($_.Name)\" }"
     ],
     "git": [
-      "Invoke-Elevated { Compress-ProcessMitigation; Add-ASLRProcessMitigation \"$env:USERPROFILE\\\\scoop\\\\apps\\\\git\\\\$((scoop info git).Installed)\" }",
-    ],
+      "Invoke-Elevated {",
+      "  Compress-ProcessMitigation;",
+      "  Add-ASLRProcessMitigation \"$env:USERPROFILE\\\\scoop\\\\apps\\\\git\\\\$((scoop info git).Installed)\"",
+      "}"
+    ]
   }
 }
