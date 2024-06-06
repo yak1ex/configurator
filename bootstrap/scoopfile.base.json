@@ -198,8 +198,8 @@
       "$ahk=@\"",
       "DetectHiddenWindows true",
       "hwnd:=WinGetID(\"秀丸エディタ ahk_class Hidemaru32Class\")",
-      "PostMessage 0x111, 11, 0, , hwnd ; 全終了",
-      "PostMessage 0x111, 4098, 0, , hwnd ; 常駐終了",
+      "PostMessage 0x111, 11, 0, , hwnd ; 全終了 ",
+      "PostMessage 0x111, 4098, 0, , hwnd ; 常駐終了 ",
       "\"@",
       "echo $ahk | autohotkey.exe *"
     ],
