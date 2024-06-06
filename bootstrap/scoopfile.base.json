@@ -177,5 +177,33 @@
     "  New-Item -Path HKCU:\\SOFTWARE\\Classes\\SystemFileAssociations\\video\\OpenWithList\\mpc-hc64.exe -Force | Out-Null",
     "  New-Item -Path HKCU:\\SOFTWARE\\Classes\\SystemFileAssociations\\audio\\OpenWithList\\mpc-hc64.exe -Force | Out-Null",
     "}"
-  ]
+  ],
+  "pre_update": {
+    "autohotkey": [
+      "$ahk=@\"",
+      "DetectHiddenWindows true",
+      "list:=WinGetList(\"ahk_exe AutoHotkey64.exe ahk_class AutoHotkey\")",
+      "Loop list.length",
+      "{",
+      "    If A_ScriptHwnd != list[A_Index]",
+      "    {",
+      "        ; WM_COMMAND exit_in_popupmenu",
+      "        PostMessage 0x111, 65307, 0, , list[A_Index]",
+      "    }",
+      "}",
+      "\"@",
+      "echo $ahk | autohotkey.exe *",
+    ],
+  },
+  "post_update": {
+    "autohotkey": [
+      "$startup=\"$env:APPDATA\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\"",
+      "Get-ChildItem $startup |",
+      "  Where-Object {$_.Name -match \"\\.ahk\\.\"} |",
+      "  ForEach-Object { & \"$startup\\$($_.Name)\" }",
+    ],
+    "git": [
+      "Invoke-Elevated { Compress-ProcessMitigation; Add-ASLRProcessMitigation \"$env:USERPROFILE\\\\scoop\\\\apps\\\\git\\\\$((scoop info git).Installed)\" }",
+    ],
+  }
 }
