@@ -45,9 +45,21 @@ function Invoke-Bootstrap {
 
    .Description
     Invoke the latest bootstrap from GitHub
-  #>
 
-  Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/yak1ex/configurator/master/bootstrap/bootstrap.ps1'))
+   .Parameter Update
+    Switch. Update after import
+    
+   .Parameter UpdateOnly
+    Switch. Skip import, implies -Update
+
+  #>
+  param(
+    [switch]$Update,
+    [switch]$UpdateOnly
+  )
+
+  $script = (New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/yak1ex/configurator/master/bootstrap/bootstrap.ps1')
+  Invoke-Expression "&{$script} $(if($Update){"-Update"}) $(if($UpdateOnly){"-UpdateOnly"})"
 }
 
 function Request-Head {
