@@ -670,6 +670,6 @@ function Send-MagicPacket
 
   $UdpClient = New-Object System.Net.Sockets.UdpClient([System.Net.IPEndPoint]::new($LocalIpAddress, 0))
   $UdpClient.Connect(([System.Net.IPAddress]::Broadcast), 9) # MagicPacket port
-  $UdpClient.Send($MagicPacket, $MagicPacket.Length)
+  $UdpClient.Send($MagicPacket, $MagicPacket.Length) | Out-Null
   $UdpClient.Close()
 }
