@@ -633,3 +633,43 @@ function Add-ASLRProcessMitigation
     Write-Host 'Admin rights are required'
   }
 }
+
+# https://www.pdq.com/blog/wake-on-lan-wol-magic-packet-powershell/
+# https://www.powershellgallery.com/packages/PSJet/0.2.0-alpha0056/Content/public%5CInvoke-WakeOnLan.ps1
+function Send-MagicPacket
+{
+  <#
+   .Synopsis
+    Send WoL Magic Packet for the specified MAC address.
+
+   .Description
+    Send WoL Magic Packet for the specified MAC address
+    from a first-found gateway inteface
+   .Parameter MacAddress
+    String. colon-separated six hexadecimal bytes like 01:23:45:ab:cd:ef
+
+   .Example
+    Send-MagicPacket 01:23:45:ab:cd:ef
+  #>
+  param(
+    [Parameter(Mandatory=$true)][string]$MacAddress
+  )
+  # Create Magic Packet content
+  $MacByteArray = $MacAddress -split "[:-]" | ForEach-Object { [Byte] "0x$_"}
+  [Byte[]] $MagicPacket = (,0xFF * 6) + ($MacByteArray * 16)
+
+  # Detect gateway interface
+  $TargetInterface = ([System.Net.NetworkInformation.NetworkInterface]::GetAllNetworkInterfaces() |
+    Where-Object {
+      $_.NetworkInterfaceType -ne [System.Net.NetworkInformation.NetworkInterfaceType]::Loopback -and
+      $_.OperationalStatus -eq [System.Net.NetworkInformation.OperationalStatus]::Up -and
+      $_.GetIPProperties().GatewayAddresses.Length -gt 0
+    })[0]
+  $LocalIpAddress = ($TargetInterface.GetIPProperties().UnicastAddresses |
+              Where-Object { $_.Address.AddressFamily -eq [System.Net.Sockets.AddressFamily]::InterNetwork })[0].Address
+
+  $UdpClient = New-Object System.Net.Sockets.UdpClient([System.Net.IPEndPoint]::new($LocalIpAddress, 0))
+  $UdpClient.Connect(([System.Net.IPAddress]::Broadcast), 9) # MagicPacket port
+  $UdpClient.Send($MagicPacket, $MagicPacket.Length)
+  $UdpClient.Close()
+}
