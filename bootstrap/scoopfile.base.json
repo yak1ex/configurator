@@ -211,6 +211,15 @@
       "PostMessage 0x111, 40001, 0, , hwnd",
       "\"@",
       "echo $ahk | autohotkey.exe *"
+    ],
+    "sysinternals": [
+      "$ahk=@\"",
+      "DetectHiddenWindows true",
+      "hwnd:=WinGetID(\"Process Explorer ahk_class PROCEXPLORER\")",
+      "; WM_COMMAND exit_in_popupmenu",
+      "PostMessage 0x111, 40001, 0, , hwnd",
+      "\"@",
+      "echo $ahk | autohotkey.exe *"
     ]
   },
   "post_update": {
@@ -249,6 +258,9 @@
       "    Set-NetFirewallRule -Program $program",
       "}",
       "& \"$env:USERPROFILE\\scoop\\apps\\powertoys\\current\\PowerToys.exe\""
+    ],
+    "sysinternals": [
+      "procexp64.exe"
     ]
   }
 }
