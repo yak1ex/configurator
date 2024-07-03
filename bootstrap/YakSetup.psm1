@@ -555,15 +555,22 @@ function Invoke-Elevated
    .Parameter ScriptBlock
     ScriptBlock. A script block invoked with administrator right.
 
+   .Parameter Args
+    String[]. Optional arguments. These parameters are passed as $Args implicitly.
+
    .Example
     Invoke-Elevated -NoExit -ScriptBlock { Write-Host }
+
+   .Example
+    Invoke-Elevated -NoExit -ScriptBlock { Write-Host $Args[1],$Args[0] } 'arg1','arg2'
   #>
   param(
     [switch]$NoExit,
-    [Parameter(Mandatory=$true)][scriptblock]$ScriptBlock
+    [Parameter(Mandatory=$true)][scriptblock]$ScriptBlock,
+    [String[]]$Args
   )
   $sh = new-object -com 'Shell.Application'
-  $sh.ShellExecute('powershell', "$(if ($NoExit) {'-NoExit '})-Command $ScriptBlock", '', 'runas')
+  $sh.ShellExecute('powershell', "$(if ($NoExit) {'-NoExit '})-Command `$Args=@($(($Args | %{''''+$_+''''}) -join ',')); $ScriptBlock", '', 'runas')
 }
 
 function Compress-ProcessMitigation
