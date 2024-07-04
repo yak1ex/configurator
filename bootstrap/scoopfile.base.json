@@ -176,6 +176,10 @@
     "  Set-ItemProperty -Path HKCU:\\SOFTWARE\\Classes\\Applications\\mpc-hc64.exe\\shell\\open\\command -Name \"(default)\" -Value \"`\"$(scoop prefix mpc-hc-fork)\\mpc-hc64.exe`\" `\"%1`\"\"",
     "  New-Item -Path HKCU:\\SOFTWARE\\Classes\\SystemFileAssociations\\video\\OpenWithList\\mpc-hc64.exe -Force | Out-Null",
     "  New-Item -Path HKCU:\\SOFTWARE\\Classes\\SystemFileAssociations\\audio\\OpenWithList\\mpc-hc64.exe -Force | Out-Null",
+    "}",
+    "if(-not ((Get-Content $env:USERPROFILE\\Documents\\WindowsPowerShell\\profile.ps1 -Raw -ErrorAction:SilentlyContinue) -match 'conda.exe')) {",
+    "  conda init",
+    "  conda config --set auto_activate_base false",
     "}"
   ],
   "pre_update": {
