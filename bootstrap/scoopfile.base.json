@@ -201,7 +201,8 @@
       "PostMessage 0x111, 11, 0, , hwnd ; 全終了 ",
       "PostMessage 0x111, 4098, 0, , hwnd ; 常駐終了 ",
       "\"@",
-      "echo $ahk | autohotkey.exe *"
+      "$OutputEncoding = [System.Text.UTF8Encoding]::new($False)",
+      "Write-Output $ahk | autohotkey.exe *"
     ],
     "powertoys": [
       "$ahk=@\"",
