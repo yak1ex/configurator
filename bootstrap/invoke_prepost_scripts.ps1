@@ -15,7 +15,7 @@ function invoke_command
     [string]$text
   )
   if ($print -or $printonly) {
-    Write-Host $text
+    Write-Output $text
   }
   if (-not $printonly) {
     Invoke-Command ([scriptblock]::Create($text))
