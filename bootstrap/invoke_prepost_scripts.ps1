@@ -26,7 +26,7 @@ if (-not $pre -and -not $post -and $update -eq "") {
   Write-Host 'No option specified'
   return
 }
-$json_data = Get-Content $json | ConvertFrom-Json
+$json_data = Get-Content -Encoding UTF8 $json | ConvertFrom-Json
 if ($pre) {
   if ($update -eq "") {
     if ($json_data.pre_install) {
