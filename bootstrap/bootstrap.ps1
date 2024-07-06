@@ -71,7 +71,7 @@ function main {
       Write-Host -ForegroundColor DarkGray "'$dir/$scoopfile': download but skip import because of -UpdateOnly."
     } else {
       Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$author/$repo/master/$path/$scoopfile" -OutFile "$dir/$scoopfile"
-      $json = Get-Content "$dir/$scoopfile" | ConvertFrom-Json
+      $json = Get-Content -Encoding UTF8 "$dir/$scoopfile" | ConvertFrom-Json
       if ($json.pre_install) {
         Write-Host "Running pre_install script..."
         Invoke-Command ([scriptblock]::Create($json.pre_install -join "`r`n"))
@@ -83,7 +83,7 @@ function main {
       }
     }
     if ($options.Update) {
-      $json = Get-Content "$dir/$scoopfile" | ConvertFrom-Json
+      $json = Get-Content -Encoding UTF8 "$dir/$scoopfile" | ConvertFrom-Json
       if ($null -ne $json.pre_update) {
         $json.pre_update.psobject.properties | ForEach-Object { $pre_update[$_.Name] = $_.Value }
       }
