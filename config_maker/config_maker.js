@@ -69,20 +69,6 @@ const question = (query, opt) => new Promise((resolve, reject) => {
   rl.question(query, cb)
 })
 
-const readdirRecurCb = (dir, cb) => {
-  const result = []
-  const process = (target, base) => PromiseB.map(fs.readdir(path.join(base, target)), e =>
-    fs.stat(path.join(base, target, e)).then(st => {
-      if(st.isDirectory()) {
-        return process(path.join(target, e), base)
-      } else {
-        result.push(target === '.' ? e : path.join(target, e))
-      }
-    })).all()
-  process('.', dir).then(() => cb(null, result)).catch(e => cb(e))
-}
-const readdirRecur = util.promisify(readdirRecurCb)
-
 const match = (filename, choice, defval) => {
   if (!choice) return defval
   const ret = choice.find(e => minimatch(filename, e[0]))
@@ -111,7 +97,7 @@ const origContext = make_context()
     const dirname = filename.substring(0, filename.length - 3)
     const outdir = path.join(work, dirname)
     await fs.mkdir(outdir)
-    await PromiseB.map(readdirRecur(path.join(input, dirname)), async filename => {
+    await PromiseB.map(fs.readdir(path.join(input, dirname), {'recursive': true}), async filename => {
       const encoding = match(filename, context.encoding, 'sjis')
       const buf = await fs.readFile(path.join(input, dirname, filename))
       await fs.ensureFile(path.join(outdir, filename))
@@ -119,7 +105,7 @@ const origContext = make_context()
     }).all()
 
 // install phase
-    return PromiseB.mapSeries(readdirRecur(path.join(work, dirname)), async filename => {
+    return PromiseB.mapSeries(fs.readdir(path.join(work, dirname), {'recursive': true}), async filename => {
       const instdir = match(filename, context.install)
       if(instdir) {
         const encoding = match(filename, context.encoding, 'sjis')
