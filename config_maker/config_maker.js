@@ -1,4 +1,3 @@
-const PromiseB = require('bluebird')
 const fs = require('fs-extra')
 const path = require('path')
 const util = require('util')
@@ -84,49 +83,51 @@ const origContext = make_context()
   await fs.remove(work)
   await fs.mkdirp(work)
 
-  PromiseB.mapSeries(
-    fs.readdir(input).then(elems => elems.filter(v => v.match(/\.js$/))),
-    async filename => {
-// collect phase
-    const script = await fs.readFile(path.join(input, filename))
-    const context = vm.createContext(Object.assign({}, origContext))
-    vm.runInContext(script, context, { filename, displayErrors: true })
-    console.log(context)
+  await fs.readdir(input).then(elems => elems.filter(v => v.match(/\.js$/))).then(elems => elems.reduce(
+    async (prev, filename) => {
+      await prev // force sequential executaion
 
-// create phase
-    const dirname = filename.substring(0, filename.length - 3)
-    const outdir = path.join(work, dirname)
-    await fs.mkdir(outdir)
-    await Promise.all(await fs.readdir(path.join(input, dirname), {'recursive': true}).then(elems=>elems.map(async filename => {
-      const encoding = match(filename, context.encoding, 'sjis')
-      const buf = await fs.readFile(path.join(input, dirname, filename))
-      await fs.ensureFile(path.join(outdir, filename))
-      fs.writeFile(path.join(outdir, filename), iconv.encode(Mustache.render(iconv.decode(buf, encoding), context), encoding))
-    })))
+      // collect phase
+      const script = await fs.readFile(path.join(input, filename))
+      const context = vm.createContext(Object.assign({}, origContext))
+      vm.runInContext(script, context, { filename, displayErrors: true })
+      console.log(context)
 
-// install phase
-    return PromiseB.mapSeries(fs.readdir(path.join(work, dirname), {'recursive': true}), async filename => {
-      const instdir = match(filename, context.install)
-      if(instdir) {
+      // create phase
+      const dirname = filename.substring(0, filename.length - 3)
+      const outdir = path.join(work, dirname)
+      await fs.mkdir(outdir)
+      await Promise.all(await fs.readdir(path.join(input, dirname), {'recursive': true}).then(elems=>elems.map(async filename => {
         const encoding = match(filename, context.encoding, 'sjis')
-        const curr = path.join(instdir, path.basename(filename))
-        const temp = path.join(outdir, filename)
-        const newFile = ! await fs.exists(curr)
-        const currContent = newFile ? '' : iconv.decode(await fs.readFile(curr), encoding)
-        const tempContent = iconv.decode(await fs.readFile(temp), encoding)
-        console.log(JsDiff.createTwoFilesPatch(curr, temp, currContent, tempContent))
-        if (currContent === tempContent) {
-          console.log('No differences, skip')
-        } else {
-          return question('apply Y/[N]? ', { choice: ['Y','N'], default: 'N' }).then(answer => {
-            if(answer === 'Y') {
-              fs.copy(temp, curr)
-            }
-          })
+        const buf = await fs.readFile(path.join(input, dirname, filename))
+        await fs.ensureFile(path.join(outdir, filename))
+        fs.writeFile(path.join(outdir, filename), iconv.encode(Mustache.render(iconv.decode(buf, encoding), context), encoding))
+      })))
+
+      // install phase
+      await fs.readdir(path.join(work, dirname), {'recursive': true}).then(elems => elems.reduce(async (prev, filename) => {
+        await prev // force sequential executaion
+        const instdir = match(filename, context.install)
+        if(instdir) {
+          const encoding = match(filename, context.encoding, 'sjis')
+          const curr = path.join(instdir, path.basename(filename))
+          const temp = path.join(outdir, filename)
+          const newFile = ! await fs.exists(curr)
+          const currContent = newFile ? '' : iconv.decode(await fs.readFile(curr), encoding)
+          const tempContent = iconv.decode(await fs.readFile(temp), encoding)
+          console.log(JsDiff.createTwoFilesPatch(curr, temp, currContent, tempContent))
+          if (currContent === tempContent) {
+            console.log('No differences, skip')
+          } else {
+            return question('apply Y/[N]? ', { choice: ['Y','N'], default: 'N' }).then(answer => {
+              if(answer === 'Y') {
+                fs.copy(temp, curr)
+              }
+            })
+          }
         }
-      }
-    }).all()
-  })
+      }, Promise.resolve()))
+    }, Promise.resolve()))
 
 })() // invoking main
 
