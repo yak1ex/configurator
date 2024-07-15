@@ -2,6 +2,7 @@
   "name": "config_maker",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "main": "config_maker.js",
   "dependencies": {
     "bluebird": "^3.5.0",

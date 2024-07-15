@@ -1,12 +1,11 @@
-const fs = require('fs-extra')
-const path = require('path')
-const util = require('util')
-const vm = require('vm')
-const readline = require('readline')
-const iconv = require('iconv-lite')
-const Mustache = require('mustache')
-const JsDiff = require('diff')
-const minimatch = require("minimatch")
+import fs from 'fs-extra'
+import path from 'node:path'
+import vm from 'node:vm'
+import readline from 'node:readline'
+import iconv from 'iconv-lite'
+import Mustache from 'mustache'
+import JsDiff from 'diff'
+import minimatch from "minimatch"
 
 function make_context () {
   const Counter = class {
@@ -74,7 +73,7 @@ const match = (filename, choice, defval) => {
   return (ret !== undefined) ? ret[1] : defval
 }
 
-const [ input, temp ] = process.argv.slice(2, 4).map(v => path.join(__dirname, v))
+const [ input, temp ] = process.argv.slice(2, 4).map(v => path.join(import.meta.dirname, v))
 const work = path.join(temp, '#work')
 const origContext = make_context()
 
