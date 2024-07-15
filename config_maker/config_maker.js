@@ -85,7 +85,7 @@ const origContext = make_context()
   await fs.mkdirp(work)
 
   PromiseB.mapSeries(
-    PromiseB.filter(fs.readdir(input), v => v.match(/\.js$/)),
+    fs.readdir(input).then(elems => elems.filter(v => v.match(/\.js$/))),
     async filename => {
 // collect phase
     const script = await fs.readFile(path.join(input, filename))
@@ -97,12 +97,12 @@ const origContext = make_context()
     const dirname = filename.substring(0, filename.length - 3)
     const outdir = path.join(work, dirname)
     await fs.mkdir(outdir)
-    await PromiseB.map(fs.readdir(path.join(input, dirname), {'recursive': true}), async filename => {
+    await Promise.all(await fs.readdir(path.join(input, dirname), {'recursive': true}).then(elems=>elems.map(async filename => {
       const encoding = match(filename, context.encoding, 'sjis')
       const buf = await fs.readFile(path.join(input, dirname, filename))
       await fs.ensureFile(path.join(outdir, filename))
       fs.writeFile(path.join(outdir, filename), iconv.encode(Mustache.render(iconv.decode(buf, encoding), context), encoding))
-    }).all()
+    })))
 
 // install phase
     return PromiseB.mapSeries(fs.readdir(path.join(work, dirname), {'recursive': true}), async filename => {
@@ -111,7 +111,7 @@ const origContext = make_context()
         const encoding = match(filename, context.encoding, 'sjis')
         const curr = path.join(instdir, path.basename(filename))
         const temp = path.join(outdir, filename)
-        const newFile = !fs.existsSync(curr)
+        const newFile = ! await fs.exists(curr)
         const currContent = newFile ? '' : iconv.decode(await fs.readFile(curr), encoding)
         const tempContent = iconv.decode(await fs.readFile(temp), encoding)
         console.log(JsDiff.createTwoFilesPatch(curr, temp, currContent, tempContent))
