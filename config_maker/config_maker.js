@@ -1,6 +1,7 @@
-const Promise = require('bluebird')
-const fs = Promise.promisifyAll(require('fs-extra'))
+const PromiseB = require('bluebird')
+const fs = require('fs-extra')
 const path = require('path')
+const util = require('util')
 const vm = require('vm')
 const readline = require('readline')
 const iconv = require('iconv-lite')
@@ -68,10 +69,10 @@ const question = (query, opt) => new Promise((resolve, reject) => {
   rl.question(query, cb)
 })
 
-const readdirRecur = (dir, cb) => {
+const readdirRecurCb = (dir, cb) => {
   const result = []
-  const process = (target, base) => fs.readdirAsync(path.join(base, target)).map(e =>
-    fs.statAsync(path.join(base, target, e)).then(st => {
+  const process = (target, base) => PromiseB.map(fs.readdir(path.join(base, target)), e =>
+    fs.stat(path.join(base, target, e)).then(st => {
       if(st.isDirectory()) {
         return process(path.join(target, e), base)
       } else {
@@ -80,7 +81,7 @@ const readdirRecur = (dir, cb) => {
     })).all()
   process('.', dir).then(() => cb(null, result)).catch(e => cb(e))
 }
-const readdirRecurAsync = Promise.promisify(readdirRecur)
+const readdirRecur = util.promisify(readdirRecurCb)
 
 const match = (filename, choice, defval) => {
   if (!choice) return defval
@@ -94,12 +95,14 @@ const origContext = make_context()
 
 ;(async function main() {
 
-  await fs.removeAsync(work)
-  await fs.mkdirpAsync(work)
+  await fs.remove(work)
+  await fs.mkdirp(work)
 
-  fs.readdirAsync(input).filter(v => v.match(/\.js$/)).mapSeries(async filename => {
+  PromiseB.mapSeries(
+    PromiseB.filter(fs.readdir(input), v => v.match(/\.js$/)),
+    async filename => {
 // collect phase
-    const script = await fs.readFileAsync(path.join(input, filename))
+    const script = await fs.readFile(path.join(input, filename))
     const context = vm.createContext(Object.assign({}, origContext))
     vm.runInContext(script, context, { filename, displayErrors: true })
     console.log(context)
@@ -107,31 +110,31 @@ const origContext = make_context()
 // create phase
     const dirname = filename.substring(0, filename.length - 3)
     const outdir = path.join(work, dirname)
-    await fs.mkdirAsync(outdir)
-    await readdirRecurAsync(path.join(input, dirname)).map(async filename => {
+    await fs.mkdir(outdir)
+    await PromiseB.map(readdirRecur(path.join(input, dirname)), async filename => {
       const encoding = match(filename, context.encoding, 'sjis')
-      const buf = await fs.readFileAsync(path.join(input, dirname, filename))
-      await fs.ensureFileAsync(path.join(outdir, filename))
-      fs.writeFileAsync(path.join(outdir, filename), iconv.encode(Mustache.render(iconv.decode(buf, encoding), context), encoding))
+      const buf = await fs.readFile(path.join(input, dirname, filename))
+      await fs.ensureFile(path.join(outdir, filename))
+      fs.writeFile(path.join(outdir, filename), iconv.encode(Mustache.render(iconv.decode(buf, encoding), context), encoding))
     }).all()
 
 // install phase
-    return readdirRecurAsync(path.join(work, dirname)).mapSeries(async filename => {
+    return PromiseB.mapSeries(readdirRecur(path.join(work, dirname)), async filename => {
       const instdir = match(filename, context.install)
       if(instdir) {
         const encoding = match(filename, context.encoding, 'sjis')
         const curr = path.join(instdir, path.basename(filename))
         const temp = path.join(outdir, filename)
         const newFile = !fs.existsSync(curr)
-        const currContent = newFile ? '' : iconv.decode(await fs.readFileAsync(curr), encoding)
-        const tempContent = iconv.decode(await fs.readFileAsync(temp), encoding)
+        const currContent = newFile ? '' : iconv.decode(await fs.readFile(curr), encoding)
+        const tempContent = iconv.decode(await fs.readFile(temp), encoding)
         console.log(JsDiff.createTwoFilesPatch(curr, temp, currContent, tempContent))
         if (currContent === tempContent) {
           console.log('No differences, skip')
         } else {
           return question('apply Y/[N]? ', { choice: ['Y','N'], default: 'N' }).then(answer => {
             if(answer === 'Y') {
-              fs.copyAsync(temp, curr)
+              fs.copy(temp, curr)
             }
           })
         }
