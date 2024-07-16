@@ -1,4 +1,5 @@
 import fs from 'fs-extra'
+import child_process from 'node:child_process'
 import path from 'node:path'
 import vm from 'node:vm'
 import readline from 'node:readline'
@@ -74,13 +75,20 @@ const match = (filename, choice, defval) => {
 }
 
 const [ input, temp ] = process.argv.slice(2, 4).map(v => path.join(import.meta.dirname, v))
-const currDir = path.join(temp, '#curr')
+const [ currDir, prevDir, stageDir ] = ['#curr', '#prev', '#stage'].map(elem => path.join(temp, elem))
 const origContext = make_context()
 
 ;(async function main() {
 
   await fs.remove(currDir)
   await fs.mkdirp(currDir)
+  // [setup]
+  // if(init) {
+  //   git init {stageDir}
+  //   at stageDir: git commit --allow-empty -m 'Initial commit.'
+  //   at stageDir: git worktree add '../#curr' work
+  //   at stageDir: hardlink from target
+  // }
 
   await fs.readdir(input).then(elems => elems.filter(v => v.match(/\.js$/))).then(elems => elems.reduce(
     async (prev, filename) => {
@@ -91,9 +99,10 @@ const origContext = make_context()
       const context = vm.createContext(Object.assign({}, origContext))
       vm.runInContext(script, context, { filename, displayErrors: true })
       console.log(context)
+      // { appname: { context, 'targets': [target_files] } }
 
       // create phase
-      const dirname = filename.substring(0, filename.length - 3)
+      const dirname = filename.substring(0, filename.length - 3) // strip extension .js
       const outdir = path.join(currDir, dirname)
       await fs.mkdir(outdir)
       await Promise.all(await fs.readdir(path.join(input, dirname), {'recursive': true}).then(elems=>elems.map(async filename => {
@@ -102,6 +111,16 @@ const origContext = make_context()
         await fs.ensureFile(path.join(outdir, filename))
         fs.writeFile(path.join(outdir, filename), iconv.encode(Mustache.render(iconv.decode(buf, encoding), context), encoding))
       })))
+      // [after all files processed]
+      // git add .
+      // git commit -m 'Update from template on yyyymmdd'
+      // hash=`git rev-parse HEAD^`
+      // if(init) {
+      //   git clone -b work {currDir} {prevDir}
+      // } else {
+      //   at prevDir: git fetch
+      // }
+      // at prevDir: git checkout {hash}
 
       // install phase
       await fs.readdir(path.join(currDir, dirname), {'recursive': true}).then(elems => elems.reduce(async (prev, filename) => {
