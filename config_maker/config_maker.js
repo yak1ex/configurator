@@ -74,13 +74,13 @@ const match = (filename, choice, defval) => {
 }
 
 const [ input, temp ] = process.argv.slice(2, 4).map(v => path.join(import.meta.dirname, v))
-const work = path.join(temp, '#work')
+const currDir = path.join(temp, '#curr')
 const origContext = make_context()
 
 ;(async function main() {
 
-  await fs.remove(work)
-  await fs.mkdirp(work)
+  await fs.remove(currDir)
+  await fs.mkdirp(currDir)
 
   await fs.readdir(input).then(elems => elems.filter(v => v.match(/\.js$/))).then(elems => elems.reduce(
     async (prev, filename) => {
@@ -94,7 +94,7 @@ const origContext = make_context()
 
       // create phase
       const dirname = filename.substring(0, filename.length - 3)
-      const outdir = path.join(work, dirname)
+      const outdir = path.join(currDir, dirname)
       await fs.mkdir(outdir)
       await Promise.all(await fs.readdir(path.join(input, dirname), {'recursive': true}).then(elems=>elems.map(async filename => {
         const encoding = match(filename, context.encoding, 'sjis')
@@ -104,7 +104,7 @@ const origContext = make_context()
       })))
 
       // install phase
-      await fs.readdir(path.join(work, dirname), {'recursive': true}).then(elems => elems.reduce(async (prev, filename) => {
+      await fs.readdir(path.join(currDir, dirname), {'recursive': true}).then(elems => elems.reduce(async (prev, filename) => {
         await prev // force sequential executaion
         const instdir = match(filename, context.install)
         if(instdir) {
