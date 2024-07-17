@@ -1,12 +1,14 @@
 import fs from 'fs-extra'
 import child_process from 'node:child_process'
 import path from 'node:path'
+import util from 'node:util'
 import vm from 'node:vm'
 import readline from 'node:readline'
 import iconv from 'iconv-lite'
 import Mustache from 'mustache'
-import JsDiff from 'diff'
 import minimatch from "minimatch"
+
+const exec = util.promisify(child_process.exec)
 
 function make_context () {
   const Counter = class {
@@ -74,78 +76,129 @@ const match = (filename, choice, defval) => {
   return (ret !== undefined) ? ret[1] : defval
 }
 
-const [ input, temp ] = process.argv.slice(2, 4).map(v => path.join(import.meta.dirname, v))
-const [ currDir, prevDir, stageDir ] = ['#curr', '#prev', '#stage'].map(elem => path.join(temp, elem))
+const [ inputDir, tempDir ] = process.argv.slice(2, 4).map(v => path.join(import.meta.dirname, v))
+const [ currDir, prevDir, stageDir ] = ['#curr', '#prev', '#stage'].map(elem => path.join(tempDir, elem))
 const origContext = make_context()
 
-;(async function main() {
+async function collect(inputDir)
+{
+  const controlFiles = await fs.readdir(inputDir).then(elems => elems.filter(v => v.match(/\.js$/)))
+  return Promise.all(controlFiles.map(async controlFile => {
+    const controlScript = await fs.readFile(path.join(inputDir, controlFile))
+    const context = vm.createContext(Object.assign({}, origContext))
+    vm.runInContext(controlScript, context, { filename: controlFile, displayErrors: true })
+    const app = path.basename(controlFile, '.js')
+    const files = await fs.readdir(path.join(inputDir, app), {'recursive': true})
+    return { app, context, files }
+  }))
+}
 
-  await fs.remove(currDir)
-  await fs.mkdirp(currDir)
-  // [setup]
-  // if(init) {
-  //   git init {stageDir}
-  //   at stageDir: git commit --allow-empty -m 'Initial commit.'
-  //   at stageDir: git worktree add '../#curr' work
-  //   at stageDir: hardlink from target
-  // }
-
-  await fs.readdir(input).then(elems => elems.filter(v => v.match(/\.js$/))).then(elems => elems.reduce(
-    async (prev, filename) => {
-      await prev // force sequential executaion
-
-      // collect phase
-      const script = await fs.readFile(path.join(input, filename))
-      const context = vm.createContext(Object.assign({}, origContext))
-      vm.runInContext(script, context, { filename, displayErrors: true })
-      console.log(context)
-      // { appname: { context, 'targets': [target_files] } }
-
-      // create phase
-      const dirname = filename.substring(0, filename.length - 3) // strip extension .js
-      const outdir = path.join(currDir, dirname)
-      await fs.mkdir(outdir)
-      await Promise.all(await fs.readdir(path.join(input, dirname), {'recursive': true}).then(elems=>elems.map(async filename => {
-        const encoding = match(filename, context.encoding, 'sjis')
-        const buf = await fs.readFile(path.join(input, dirname, filename))
-        await fs.ensureFile(path.join(outdir, filename))
-        fs.writeFile(path.join(outdir, filename), iconv.encode(Mustache.render(iconv.decode(buf, encoding), context), encoding))
-      })))
-      // [after all files processed]
-      // git add .
-      // git commit -m 'Update from template on yyyymmdd'
-      // hash=`git rev-parse HEAD^`
-      // if(init) {
-      //   git clone -b work {currDir} {prevDir}
-      // } else {
-      //   at prevDir: git fetch
-      // }
-      // at prevDir: git checkout {hash}
-
-      // install phase
-      await fs.readdir(path.join(currDir, dirname), {'recursive': true}).then(elems => elems.reduce(async (prev, filename) => {
-        await prev // force sequential executaion
-        const instdir = match(filename, context.install)
-        if(instdir) {
-          const encoding = match(filename, context.encoding, 'sjis')
-          const curr = path.join(instdir, path.basename(filename))
-          const temp = path.join(outdir, filename)
-          const newFile = ! await fs.exists(curr)
-          const currContent = newFile ? '' : iconv.decode(await fs.readFile(curr), encoding)
-          const tempContent = iconv.decode(await fs.readFile(temp), encoding)
-          console.log(JsDiff.createTwoFilesPatch(curr, temp, currContent, tempContent))
-          if (currContent === tempContent) {
-            console.log('No differences, skip')
-          } else {
-            return question('apply Y/[N]? ', { choice: ['Y','N'], default: 'N' }).then(answer => {
-              if(answer === 'Y') {
-                fs.copy(temp, curr)
-              }
-            })
-          }
+async function prepare(specs, stageDir) {
+  const isInit = await fs.exists(currDir)
+  if (!isInit) {
+    await fs.mkdirp(stageDir)
+    await exec(`git init ${stageDir}`)
+    await exec('git commit --allow-empty -m "Initial commit (empty)."', {'cwd': stageDir})
+    await exec('git switch -c work', {'cwd': stageDir})
+    await exec('git switch -', {'cwd': stageDir})
+    await exec(`git worktree add "${currDir}" work `, {'cwd': stageDir})
+    await Promise.all(specs.map(spec =>
+      Promise.all(spec.files.map(file => {
+        const instDir = match(file, spec.context.install)
+        if(instDir) {
+          return fs.ensureLink(path.join(instDir, file), path.join(stageDir, spec.app, file))
         }
-      }, Promise.resolve()))
-    }, Promise.resolve()))
+      }))
+    ))
+    await exec('git add .', {'cwd': stageDir})
+    await exec('git commit -m "Initial import."', {'cwd': stageDir})
+    await exec(`git clone -b work ${currDir} ${prevDir}`)
+  }
+}
 
+function getEncoding(file, context) {
+  const encoding = match(file, context.encoding, 'sjis')
+  if (encoding === 'utf8-bom') {
+    return { encoding: 'utf8', bom: true }
+  } else {
+    return { encoding, bom: false }
+  }
+}
+
+async function generate(specs, inputDir) {
+  return Promise.all(specs.map(async spec => {
+    const outDir = path.join(currDir, spec.app)
+    await fs.mkdirp(outDir)
+    return Promise.all(spec.files.map(async file => {
+      const encoding = getEncoding(file, spec.context)
+      const buf = await fs.readFile(path.join(inputDir, spec.app, file))
+      const decodedBuf = iconv.decode(buf, encoding.encoding)
+      const renderedBuf = Mustache.render(decodedBuf, spec.context)
+      const encodedResult = iconv.encode(renderedBuf, encoding.encoding, { addBOM: encoding.bom })
+      const outFile = path.join(outDir, file)
+      await fs.ensureFile(outFile)
+      fs.writeFile(outFile, encodedResult)
+    }))
+  }))
+}
+
+async function update(specs, currDir) {
+  await exec('git add .', {'cwd': currDir})
+  const dateTime = (new Date()).toLocaleString()
+  await exec(`git diff-index --quiet HEAD || git commit -m "Update from template on ${dateTime}."`, {'cwd': currDir})
+  const { stdout: hash } = await exec('git rev-parse "HEAD^"', {'cwd': currDir})
+  await exec('git fetch', {'cwd': prevDir})
+  console.log(hash)
+  await exec(`git clean -df`, {'cwd': prevDir})
+  await exec(`git checkout ${hash}`, {'cwd': prevDir})
+}
+
+async function getContent(targetPath) {
+  try {
+    return await fs.readFile(targetPath)
+  } catch(e) {
+    return
+  }
+}
+
+async function install(specs, prevDir, currDir, stageDir) {
+  const targets = await Promise.all(specs.map(async spec =>
+    await Promise.all(spec.files.map(async file => {
+      const currPath = path.join(currDir, spec.app, file)
+      const currBuf = await getContent(currPath)
+      const prevPath = path.join(prevDir, spec.app, file)
+      const prevBuf = await getContent(prevPath)
+      if (prevBuf === undefined) {
+        await fs.ensureFile(prevPath)
+      }
+      if (prevBuf && currBuf && currBuf.compare(prevBuf) === 0) {
+        console.log(`${spec.app}/${file}: prev and curr is identical, skip`)
+      } else {
+        const stagePath = path.join(stageDir, spec.app, file)
+        const stageBuf = await getContent(stagePath)
+        if (currBuf && stageBuf && currBuf.compare(stageBuf) === 0) {
+          console.log(`${spec.app}/${file}: stage and curr is identical, skip`)
+        } else {
+          return { prevPath, currPath, stagePath }
+        }
+      }
+    }))
+  ))
+  //console.log(targets)
+  targets.filter(target => target !== undefined).forEach(target =>
+    target.filter(paths => paths !== undefined).forEach(paths =>
+      child_process.execSync(`winmergeu ${paths.prevPath} ${paths.currPath} ${paths.stagePath}`)
+    )
+  )
+}
+
+;(async function main() {
+  const specs = await collect(inputDir)
+  console.log(specs)
+  await prepare(specs, stageDir)
+  await generate(specs, inputDir)
+  await update(specs, currDir)
+  await install(specs, prevDir, currDir, stageDir)
+  // rollback() or commit()
 })() // invoking main
 
