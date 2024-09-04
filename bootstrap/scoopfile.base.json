@@ -208,6 +208,9 @@
       "$OutputEncoding = [System.Text.UTF8Encoding]::new($False)",
       "Write-Output $ahk | autohotkey.exe *"
     ],
+    "manictime": [
+      "Stop-Process (Get-Process ManicTime)"
+    ],
     "powertoys": [
       "$ahk=@\"",
       "DetectHiddenWindows true",
@@ -242,6 +245,9 @@
       "  Compress-ProcessMitigation;",
       "  Add-ASLRProcessMitigation \"$env:USERPROFILE\\scoop\\apps\\git\\$((((scoop info git).Installed) -split '\\n')[-1])\"",
       "}"
+    ],
+    "manictime": [
+      "& \"$(scoop prefix manictime)\\ManicTimeClient.exe\""
     ],
     "powertoys": [
       "$exe=\"powertoys.mousewithoutborders.exe\"",
