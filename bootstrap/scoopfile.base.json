@@ -240,7 +240,7 @@
     "git": [
       "Invoke-Elevated {",
       "  Compress-ProcessMitigation;",
-      "  Add-ASLRProcessMitigation \"$env:USERPROFILE\\\\scoop\\\\apps\\\\git\\\\$((scoop info git).Installed)\"",
+      "  Add-ASLRProcessMitigation \"$env:USERPROFILE\\scoop\\apps\\git\\$((((scoop info git).Installed) -split '\\n')[-1])\"",
       "}"
     ],
     "powertoys": [
