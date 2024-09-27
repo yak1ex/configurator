@@ -76,6 +76,11 @@
     {
       "Info": "",
       "Source": "main",
+      "Name": "gh"
+    },
+    {
+      "Info": "",
+      "Source": "main",
       "Name": "git"
     },
     {
