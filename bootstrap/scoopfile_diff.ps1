@@ -7,7 +7,7 @@
   Equivalence check is based on Name property.
 
  .Example
-  (scoop export), (Get-Content .\scoopfile.base.json) | .\scoopfile_diff.ps1
+  (scoop export), (Get-Content .\scoopfile.base.json -Encoding UTF8) | .\scoopfile_diff.ps1
 #>
 
 $jqcmd =
