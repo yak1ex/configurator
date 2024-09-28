@@ -7,6 +7,7 @@ import readline from 'node:readline'
 import iconv from 'iconv-lite'
 import Mustache from 'mustache'
 import minimatch from "minimatch"
+import { fileURLToPath } from "node:url";
 
 const exec = util.promisify(child_process.exec)
 
@@ -76,11 +77,7 @@ const match = (filename, choice, defval) => {
   return (ret !== undefined) ? ret[1] : defval
 }
 
-const [ inputDir, tempDir ] = process.argv.slice(2, 4).map(v => path.join(import.meta.dirname, v))
-const [ currDir, prevDir, stageDir ] = ['#curr', '#prev', '#stage'].map(elem => path.join(tempDir, elem))
-const origContext = make_context()
-
-async function collect(inputDir)
+async function collect(inputDir, origContext)
 {
   const controlFiles = await fs.readdir(inputDir).then(elems => elems.filter(v => v.match(/\.js$/)))
   return Promise.all(controlFiles.map(async controlFile => {
@@ -93,7 +90,7 @@ async function collect(inputDir)
   }))
 }
 
-async function prepare(specs, stageDir) {
+async function prepare(specs, prevDir, currDir, stageDir) {
   const isInit = await fs.exists(currDir)
   if (!isInit) {
     await fs.mkdirp(stageDir)
@@ -125,7 +122,7 @@ function getEncoding(file, context) {
   }
 }
 
-async function generate(specs, inputDir) {
+async function generate(specs, inputDir, currDir) {
   return Promise.all(specs.map(async spec => {
     const outDir = path.join(currDir, spec.app)
     await fs.mkdirp(outDir)
@@ -142,7 +139,7 @@ async function generate(specs, inputDir) {
   }))
 }
 
-async function update(specs, currDir) {
+async function update(specs, prevDir, currDir) {
   await exec('git add .', {'cwd': currDir})
   const dateTime = (new Date()).toLocaleString()
   await exec(`git diff-index --quiet HEAD || git commit -m "Update from template on ${dateTime}."`, {'cwd': currDir})
@@ -192,12 +189,26 @@ async function install(specs, prevDir, currDir, stageDir) {
   )
 }
 
+// ref. https://zenn.dev/risu729/articles/dirname-in-esm
+function my_dirname() {
+  if('dirname' in import.meta) {
+    return import.meta.dirname
+  } else {
+    const filename = fileURLToPath(import.meta.url)
+    return path.dirname(filename)
+  }
+}
+
 ;(async function main() {
-  const specs = await collect(inputDir)
+  const [ inputDir, tempDir ] = process.argv.slice(2, 4).map(v => path.join(my_dirname(), v))
+  const [ currDir, prevDir, stageDir ] = ['#curr', '#prev', '#stage'].map(elem => path.join(tempDir, elem))
+  const origContext = make_context()
+  
+  const specs = await collect(inputDir, origContext)
   console.log(specs)
-  await prepare(specs, stageDir)
-  await generate(specs, inputDir)
-  await update(specs, currDir)
+  await prepare(specs, prevDir, currDir, stageDir)
+  await generate(specs, inputDir, currDir)
+  await update(specs, prevDir, currDir)
   await install(specs, prevDir, currDir, stageDir)
   // rollback() or commit()
 })() // invoking main
