@@ -7,6 +7,8 @@ import readline from 'node:readline'
 import iconv from 'iconv-lite'
 import Mustache from 'mustache'
 import minimatch from "minimatch"
+import clArgs from 'command-line-args'
+import clUsage from 'command-line-usage'
 import { fileURLToPath } from "node:url";
 
 const exec = util.promisify(child_process.exec)
@@ -200,7 +202,34 @@ function my_dirname() {
 }
 
 ;(async function main() {
-  const [ inputDir, tempDir ] = process.argv.slice(2, 4).map(v => path.join(my_dirname(), v))
+  const optionDef = [
+    { name: 'input', alias: 'i', type: String, description: 'input folder including configuration templates' },
+    { name: 'output', alias: 'o', type: String, description: 'output folder including #curr/#prev/#stage' },
+    { name: 'help', alias: 'h', type: Boolean, description: 'Display this usage guide' }
+  ]
+
+  const options = clArgs(optionDef)
+  if (options.help) {
+    const usage = clUsage([
+      {
+        header: 'Config Maker',
+        content: 'generatates configuration files from templates, compare with current files and manage them under git control'
+      },
+      {
+        header: 'Synopsis',
+        content: [
+          '> node config_maker.js \\#conf \\#work',
+        ]
+      },
+      {
+        header: 'Options',
+        optionList: optionDef
+      }
+    ])
+    console.log(usage)
+    return
+  }
+  const [ inputDir, tempDir ] = [ options.input, options.output ].map(v => path.join(my_dirname(), v))
   const [ currDir, prevDir, stageDir ] = ['#curr', '#prev', '#stage'].map(elem => path.join(tempDir, elem))
   const origContext = make_context()
   
