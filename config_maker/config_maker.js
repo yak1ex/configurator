@@ -1,7 +1,7 @@
 import fs from 'fs-extra'
 import child_process from 'node:child_process'
 import path from 'node:path'
-import util from 'node:util'
+import util, { isUndefined } from 'node:util'
 import vm from 'node:vm'
 import readline from 'node:readline'
 import iconv from 'iconv-lite'
@@ -209,7 +209,11 @@ function my_dirname() {
   ]
 
   const options = clArgs(optionDef)
-  if (options.help) {
+  const noargs = options.input === undefined || !fs.statSync(options.input, { throwIfNoEntry: false })?.isDirectory() || options.output === undefined
+  if (options.help || noargs) {
+    if (noargs) {
+      console.log('input and output are mandatory options and input directory must exist')
+    }
     const usage = clUsage([
       {
         header: 'Config Maker',
