@@ -222,12 +222,21 @@ function my_dirname() {
       {
         header: 'Synopsis',
         content: [
-          '> node config_maker.js \\#conf \\#work',
+          '> node config_maker.js -input \\#conf -output \\#work',
         ]
       },
       {
         header: 'Options',
         optionList: optionDef
+      },
+      {
+        header: 'Folders',
+        content: [
+          'All the follwing folders are version-controled by git.',
+          'work/#prev: The previous state for files generated from templates.',
+          'work/#curr: The current state for files generated from templates.',
+          'work/#stage: Staging folder includes hardlinks to actual configuraiton files.'
+        ]
       }
     ])
     console.log(usage)
