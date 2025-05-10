@@ -1,3 +1,43 @@
+<#
+.SYNOPSIS
+
+Invoke and/or show script fragments in scoopfile.json
+
+.DESCRIPTION
+
+You can specify the following behaviour by parameters.
+
+- Execute and/or Print scripts.
+- Pre and/or Post scripts.
+- Specify an app for Update.
+
+.PARAMETER Pre
+
+Specify pre parts as targets
+
+.PARAMETER Post
+
+Specify post parts as targets
+
+.PARAMETER Print
+
+Print and execute scripts
+
+.PARAMETER PrintOnly
+
+Print scripts only, not execute them
+
+.PARAMETER Json
+
+Specify an input JSON file
+
+.PARAMETER Update
+
+Specify update scripts as targets instead of install scripts.
+A target app name should be specified.
+
+#>
+
 param(
   [switch]$pre,
   [switch]$post,
