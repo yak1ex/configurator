@@ -95,11 +95,6 @@
     },
     {
       "Info": "",
-      "Source": "extras",
-      "Name": "irfanview"
-    },
-    {
-      "Info": "",
       "Source": "main",
       "Name": "jq"
     },
@@ -121,6 +116,11 @@
     {
       "Info": "",
       "Source": "extras",
+      "Name": "nomacs",
+    },
+    {
+      "Info": "",
+      "Source": "extras",
       "Name": "notepadplusplus"
     },
     {
@@ -132,6 +132,11 @@
       "Info": "",
       "Source": "extras",
       "Name": "powertoys"
+    },
+    {
+      "Info": "",
+      "Source": "extras",
+      "Name": "sharex",
     },
     {
       "Info": "",
