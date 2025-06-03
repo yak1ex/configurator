@@ -257,6 +257,28 @@
       "\"@",
       "echo $ahk | autohotkey.exe *"
     ],
+    "sharex": [
+      "$ahk=@\"",
+      "DetectHiddenWindows true",
+      "SetTitleMatchMode \"RegEx\"",
+      "try {",
+      "    hwnd:=WinGetID(\"ShareX \\d+\\.\\d+ Portable\")",
+      "} catch TargetError {",
+      "    ExitApp",
+      "}",
+      "; WM_COMMAND exit_in_popupmenu",
+      "PostMessage 0x10, 0, 0, , hwnd ; WM_CLOSE",
+      "loop {",
+      "    try {",
+      "        hwnd:=WinGetID(\"ShareX \\d+\\.\\d+ Portable\")",
+      "    } catch TargetError {",
+      "        Break",
+      "    }",
+      "    Sleep 500",
+      "}",
+      "\"@",
+      "echo $ahk | autohotkey.exe *"
+    ],
     "sysinternals": [
       "$ahk=@\"",
       "DetectHiddenWindows true",
@@ -297,6 +319,9 @@
     ],
     "manictime": [
       "& \"$(scoop prefix manictime)\\ManicTimeClient.exe\""
+    ],
+    "sharex": [
+      "sharex.exe"
     ],
     "powertoys": [
       "$exe=\"powertoys.mousewithoutborders.exe\"",
