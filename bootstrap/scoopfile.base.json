@@ -76,6 +76,11 @@
     {
       "Info": "",
       "Source": "main",
+      "Name": "fnm"
+    },
+    {
+      "Info": "",
+      "Source": "main",
       "Name": "gh"
     },
     {
@@ -122,11 +127,6 @@
       "Info": "",
       "Source": "extras",
       "Name": "notepadplusplus"
-    },
-    {
-      "Info": "",
-      "Source": "main",
-      "Name": "nvm"
     },
     {
       "Info": "",
