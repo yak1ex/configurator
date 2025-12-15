@@ -234,7 +234,16 @@
       "Write-Output $ahk | autohotkey.exe *"
     ],
     "manictime": [
-      "Stop-Process (Get-Process ManicTime)"
+      "$target_pid = (Get-Process ManicTime -ErrorAction SilentlyContinue).Id",
+      "If ($target_pid) {",
+      "    Stop-Process -Id $target_pid",
+      "    Wait-Process -Id $target_pid -ErrorAction SilentlyContinue",
+      "}",
+      "$target_pid = (Get-Process ManicTimeClient -ErrorAction SilentlyContinue).Id",
+      "If ($target_pid) {",
+      "    Stop-Process -Id $target_pid",
+      "    Wait-Process -Id $target_pid -ErrorAction SilentlyContinue",
+      "}"
     ],
     "powertoys": [
       "$ahk=@\"",
