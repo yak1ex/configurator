@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 
-Invoke and/or show script fragments in scoopfile.json
+Invoke and/or show script fragments in scoopfile.json or scoop manifest
 
 .DESCRIPTION
 
@@ -9,7 +9,8 @@ You can specify the following behaviour by parameters.
 
 - Execute and/or Print scripts.
 - Pre and/or Post scripts.
-- Specify an app for Update.
+- A target app for Update.
+- JSON object path to the target string array.
 
 .PARAMETER Pre
 
@@ -36,6 +37,10 @@ Specify an input JSON file
 Specify update scripts as targets instead of install scripts.
 A target app name should be specified.
 
+.PARAMETER Path
+
+Specify a path to the target JSON array object.
+
 #>
 
 param(
@@ -44,7 +49,8 @@ param(
   [switch]$print,
   [switch]$printonly,
   [Parameter(Mandatory=$true)][string]$json,
-  [string]$update
+  [string]$update,
+  [string]$path
 )
 
 function invoke_command
@@ -62,8 +68,12 @@ function invoke_command
   }
 }
 
-if (-not $pre -and -not $post -and $update -eq "") {
+if (-not $pre -and -not $post -and $update -eq "" -and $path -eq "") {
   Write-Host 'No option specified'
+  return
+}
+if ($path -ne "" -and ($pre -or $post -or $update -ne "")) {
+  Write-Host 'When you specify a path, do not specify other options'
   return
 }
 $json_data = Get-Content -Encoding UTF8 $json | ConvertFrom-Json
@@ -93,4 +103,16 @@ if ($post) {
     }
 
   }
+}
+if ($path -ne "") {
+  foreach ($step in $path.Split('.')) {
+    if ($json_data.$step) {
+      $json_data = $json_data.$step
+    } else {
+      Write-Host "Path not found: $path"
+      return
+    }
+  }
+  Write-Host "Running scripts at path: $path..."
+  invoke_command -Print:$print -PrintOnly:$printonly -Text ($json_data -join "`r`n")
 }
