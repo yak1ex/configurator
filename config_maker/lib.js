@@ -107,20 +107,22 @@ const ConfigMaker = class {
       await exec('git switch -c work', {'cwd': this.stageDir})
       await exec('git switch -', {'cwd': this.stageDir})
       await exec(`git worktree add "${this.currDir}" work `, {'cwd': this.stageDir})
-      await Promise.all(this.specs.map(spec =>
-        Promise.all(spec.files.map(file => {
-          const instDir = match(file, spec.context.install)
-          if(instDir) {
-            return fs.ensureFile(path.join(instDir, file)).then(
-              () => fs.ensureLink(path.join(instDir, file), path.join(this.stageDir, spec.app, file))
-            )
-          }
-        }))
-      ))
-      await exec('git add .', {'cwd': this.stageDir})
-      await exec('git commit -m "Initial import."', {'cwd': this.stageDir})
       await exec(`git clone -b work ${this.currDir} ${this.prevDir}`)
     }
+    // Handle new configuration files
+    const message = isInit ? "Initial import." : `Add empty placeholders on ${(new Date()).toLocaleString()}.`
+    await Promise.all(this.specs.map(spec =>
+      Promise.all(spec.files.map(file => {
+        const instDir = this.match(file, spec.context.install)
+        if(instDir) {
+          return fs.ensureFile(path.join(instDir, file)).then(
+            () => fs.ensureLink(path.join(instDir, file), path.join(this.stageDir, spec.app, file))
+          )
+        }
+      }))
+    ))
+    await exec('git add .', {'cwd': this.stageDir})
+    await exec(`git diff-index --quiet HEAD || git commit -m "${message}."`, {'cwd': this.stageDir})
   }
 
   getEncoding(file, context) {
