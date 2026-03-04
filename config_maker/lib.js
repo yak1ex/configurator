@@ -99,8 +99,8 @@ const ConfigMaker = class {
   }
 
   async prepare() {
-    const isInit = await fs.exists(this.currDir)
-    if (!isInit) {
+    const isInit = ! await fs.exists(this.currDir)
+    if (isInit) {
       await fs.mkdirp(this.stageDir)
       await exec(`git init ${this.stageDir}`)
       await exec('git commit --allow-empty -m "Initial commit (empty)."', {'cwd': this.stageDir})
