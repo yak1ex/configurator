@@ -111,7 +111,9 @@ const ConfigMaker = class {
         Promise.all(spec.files.map(file => {
           const instDir = match(file, spec.context.install)
           if(instDir) {
-            return fs.ensureLink(path.join(instDir, file), path.join(this.stageDir, spec.app, file))
+            return fs.ensureFile(path.join(instDir, file)).then(
+              () => fs.ensureLink(path.join(instDir, file), path.join(this.stageDir, spec.app, file))
+            )
           }
         }))
       ))
