@@ -271,7 +271,7 @@
       "If ($target_pid) {",
       "    Stop-Process -Id $target_pid",
       "    Wait-Process -Id $target_pid -ErrorAction SilentlyContinue",
-      "}",
+      "}"
     ],
     "sysinternals": [
       "$ahk=@\"",
