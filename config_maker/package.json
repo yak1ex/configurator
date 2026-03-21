@@ -16,5 +16,9 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "yak_ex@mx.scn.tv",
-  "license": "Zlib"
+  "license": "Zlib",
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "typescript": "^5.7.3"
+  }
 }
