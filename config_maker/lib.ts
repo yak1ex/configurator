@@ -7,10 +7,11 @@ import readline from 'node:readline'
 import iconv from 'iconv-lite'
 import Mustache from 'mustache'
 import minimatch from "minimatch"
+import { mapTuple, assertType, isString } from './type-utils.js'
 
 const exec = util.promisify(child_process.exec)
 
-const Counter = class {
+class Counter {
   private value: number
   constructor (init: number, private minimum: number, private pad: string) {
       this.value = init
@@ -19,45 +20,52 @@ const Counter = class {
   }
   keep () { let s = this.value.toString(); return this._pad(s) }
   incr () { let s = (this.value++).toString(); return this._pad(s) }
-  set () { return (text, render) => { this.value = parseInt(text) } }
+  set () { return (text: string, render: any) => { this.value = parseInt(text) } }
   private _pad (s: string) { return s.length < this.minimum ? this.pad.repeat(this.minimum - s.length)+s : s; }
   [Symbol.toPrimitive](hint: string) { if (hint === 'number') { return this.value++ } else { return this.incr() } }
 }
 
-const ConfigMaker = class {
+type Spec = {
+  app: string,
+  context: vm.Context,
+  files: string[],
+}
+
+class ConfigMaker {
   private currDir: string
   private prevDir: string
   private stageDir: string
-  private origContext: any // FIXME
-  private specs: object
+  private origContext: vm.Context
+  private specs: Spec[] = []
 
   constructor(private inputDir: string, private tempDir: string) {
     this.inputDir = inputDir
     this.tempDir = tempDir
-    ;[ this.currDir, this.prevDir, this.stageDir ] = ['#curr', '#prev', '#stage'].map(elem => path.join(tempDir, elem))
+    ;[ this.currDir, this.prevDir, this.stageDir ] = mapTuple(['#curr', '#prev', '#stage'], elem => path.join(tempDir, elem))
     this.origContext = this.make_context()
+  }
+
+  get_specs () {
+    return this.specs
   }
 
   make_context () {
 
-    let make_counter = (init: number, minimum: number, pad: string) => new Proxy(new Counter(init, minimum, pad), {
-      get: function(obj, prop) {
-        if(obj.hasOwnProperty(prop) && typeof obj[prop] === 'function') {
-          return function (s) { // Here, 'this' might be used as context
-            return obj[prop].call(obj, s)
-          }
-        } else return obj[prop]
-      }
-    })
+    let make_counter = (init: number, minimum: number, pad: string) => new Counter(init, minimum, pad)
     //{{counter}} {{counter.incr}}
     //{{counter.keep}}
     //{{#counter.set}}3{{/counter.set}}
 
+    const errorMessage = 'Access to environment variables by NOT string key'
     let env = new Proxy({}, {
       get: function(obj, prop) {
-        return typeof prop === 'string' ? process.env[prop.toUpperCase()] : obj[prop]
+        assertType(prop, isString, errorMessage)
+        return process.env[prop.toUpperCase()]
       },
-      has: function(obj, prop) { return typeof prop === 'string' ? prop.toUpperCase() in process.env : prop in obj },
+      has: function(obj, prop) {
+        assertType(prop, isString, errorMessage)
+        return prop.toUpperCase() in process.env
+      },
       set: function(obj, prop, value) { return false; }
     })
 
@@ -71,22 +79,26 @@ const ConfigMaker = class {
     return context_base
   }
 
-  question = (query: string, opt: { choice?: string[], default?: string }) => new Promise((resolve, reject) => {
-    const option = Object.assign({ choice: [] }, opt)
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
-    const cb = (answer: string) => {
-      if(answer === '' && 'default' in option) answer = option.default
-      if(option.choice.includes(answer)) {
-        rl.close()
-        resolve(answer)
-      } else {
-        rl.question(query, cb)
+  question (query: string, opt: { choice?: string[], default?: string }) {
+    return new Promise<string>((resolve, reject) => {
+      const option = Object.assign({ choice: [] }, opt)
+      const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
+      const cb = (answer: string) => {
+        if(answer === '' && 'default' in option) answer = option.default
+        if(option.choice.includes(answer)) {
+          rl.close()
+          resolve(answer)
+        } else {
+          rl.question(query, cb)
+        }
       }
-    }
-    rl.question(query, cb)
-  })
+      rl.question(query, cb)
+    })
+  }
 
-  match = (filename: string, choice: [string,string][]|undefined, defval: string|undefined) => {
+  match (filename: string, choice: [string,string][]|undefined) : string | undefined
+  match (filename: string, choice: [string,string][]|undefined, defval: string) : string
+  match (filename: string, choice: [string,string][]|undefined, defval?: string) {
     if (!choice) return defval
     const ret = choice.find(e => minimatch(filename, e[0]))
     return (ret !== undefined) ? ret[1] : defval
@@ -96,39 +108,45 @@ const ConfigMaker = class {
   {
     const controlFiles = await fs.readdir(this.inputDir).then(elems => elems.filter(v => v.match(/\.js$/)))
     this.specs = await Promise.all(controlFiles.map(async controlFile => {
-      const controlScript = await fs.readFile(path.join(this.inputDir, controlFile))
+      const controlScript = await fs.readFile(path.join(this.inputDir, controlFile), 'utf-8')
       const context = vm.createContext(Object.assign({}, this.origContext))
       vm.runInContext(controlScript, context, { filename: controlFile, displayErrors: true })
       const app = path.basename(controlFile, '.js')
-      const files = await fs.readdir(path.join(this.inputDir, app), {'recursive': true})
+      const files = await fs.readdir(path.join(this.inputDir, app), { 'encoding': 'utf8', 'recursive': true})
       return { app, context, files }
     }))
   }
 
   async prepare() {
-    const isInit = await fs.exists(this.currDir)
-    if (!isInit) {
+    const isInit = ! await fs.exists(this.currDir)
+    if (isInit) {
       await fs.mkdirp(this.stageDir)
       await exec(`git init ${this.stageDir}`)
       await exec('git commit --allow-empty -m "Initial commit (empty)."', {'cwd': this.stageDir})
       await exec('git switch -c work', {'cwd': this.stageDir})
       await exec('git switch -', {'cwd': this.stageDir})
       await exec(`git worktree add "${this.currDir}" work `, {'cwd': this.stageDir})
-      await Promise.all(this.specs.map(spec =>
-        Promise.all(spec.files.map(file => {
-          const instDir = this.match(file, spec.context.install)
-          if(instDir) {
-            return fs.ensureLink(path.join(instDir, file), path.join(this.stageDir, spec.app, file))
-          }
-        }))
-      ))
       await exec('git add .', {'cwd': this.stageDir})
       await exec('git commit -m "Initial import."', {'cwd': this.stageDir})
       await exec(`git clone -b work ${this.currDir} ${this.prevDir}`)
     }
+    // Handle new configuration files
+    const message = isInit ? "Initial import." : `Add empty placeholders on ${(new Date()).toLocaleString()}.`
+    await Promise.all(this.specs.map(spec =>
+      Promise.all(spec.files.map(file => {
+        const instDir = this.match(file, spec.context.install)
+        if(instDir) {
+          return fs.ensureFile(path.join(instDir, file)).then(
+            () => fs.ensureLink(path.join(instDir, file), path.join(this.stageDir, spec.app, file))
+          )
+        }
+      }))
+    ))
+    await exec('git add .', {'cwd': this.stageDir})
+    await exec(`git diff-index --quiet HEAD || git commit -m "${message}."`, {'cwd': this.stageDir})
   }
 
-  getEncoding(file: string, context: { encoding?: [string,string][] }) { // FIXME
+  getEncoding(file: string, context: { encoding?: [string,string][] }) : { encoding: string, bom: boolean } {
     const encoding = this.match(file, context.encoding, 'sjis')
     if (encoding === 'utf8-bom') {
       return { encoding: 'utf8', bom: true }
@@ -165,7 +183,7 @@ const ConfigMaker = class {
     await exec(`git checkout ${hash}`, {'cwd': this.prevDir})
   }
 
-  async getContent(targetPath) {
+  async getContent(targetPath: string) {
     try {
       return await fs.readFile(targetPath)
     } catch(e) {

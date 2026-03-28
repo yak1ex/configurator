@@ -3,6 +3,7 @@ import path from 'node:path'
 import clArgs from 'command-line-args'
 import clUsage from 'command-line-usage'
 import { fileURLToPath } from "node:url";
+import { mapTuple } from './type-utils.js'
 import ConfigMaker from './lib.js'
 
 // ref. https://zenn.dev/risu729/articles/dirname-in-esm
@@ -56,11 +57,12 @@ function my_dirname() {
     console.log(usage)
     return
   }
-  const [ inputDir, tempDir ] = [ options.input, options.output ].map(v => path.join(my_dirname(), v))
+  const inout = [ options.input, options.output ] as [string, string]
+  const [ inputDir, tempDir ] = mapTuple(inout, (v: string) => path.join(my_dirname(), v))
   const configMaker = new ConfigMaker(inputDir, tempDir)
   
   await configMaker.collect()
-  console.log(configMaker.specs)
+  console.log(configMaker.get_specs())
   await configMaker.prepare()
   await configMaker.generate()
   await configMaker.update()
