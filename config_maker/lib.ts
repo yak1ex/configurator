@@ -17,7 +17,15 @@ class Counter {
   }
   keep () { let s = this.value.toString(); return this._pad(s) }
   incr () { let s = (this.value++).toString(); return this._pad(s) }
-  set () { return (text: string, render: any) => { this.value = parseInt(text) } }
+  set () {
+    return (text: string, render: any) => {
+      const next = Number.parseInt(text, 10)
+      if (Number.isNaN(next)) {
+        throw new TypeError(`Counter value must be a number, but got "${text}".`)
+      }
+      this.value = next
+    }
+  }
   private _pad (s: string) { return s.length < this.minimum ? this.pad.repeat(this.minimum - s.length)+s : s; }
   [Symbol.toPrimitive](hint: string) { if (hint === 'number') { return this.value++ } else { return this.incr() } }
 }
@@ -40,8 +48,8 @@ class ConfigMaker {
     this.origContext = this.make_context()
   }
 
-  get_specs () {
-    return this.specs
+  get_specs () : readonly Spec[] {
+    return [...this.specs]
   }
 
   make_context () {
@@ -113,10 +121,19 @@ class ConfigMaker {
       const context = vm.createContext(Object.assign({}, this.origContext))
       vm.runInContext(controlScript, context, { filename: controlFile, displayErrors: true })
       const app = path.basename(controlFile, '.js')
+      const appDir = path.join(this.inputDir, app)
       const files = await fs.readdir(
-        path.join(this.inputDir, app),
-        { 'encoding': 'utf8', 'recursive': true, withFileTypes: true }
-      ).then(elems => elems.filter(v => v.isFile()).map(v => v.name)  )
+        appDir,
+        { 'encoding': 'utf8', 'recursive': true }
+      ).then(async (entries) => {
+        const checks = await Promise.all(
+          (entries as string[]).map(async (relPath) => ({
+            relPath,
+            stat: await fs.stat(path.join(appDir, relPath)),
+          }))
+        )
+        return checks.filter(({ stat }) => stat.isFile()).map(({ relPath }) => relPath)
+      })
       return { app, context, files }
     }))
   }
@@ -130,8 +147,6 @@ class ConfigMaker {
       await exec('git switch -c work', {'cwd': this.stageDir})
       await exec('git switch -', {'cwd': this.stageDir})
       await exec(`git worktree add "${this.currDir}" work `, {'cwd': this.stageDir})
-      await exec('git add .', {'cwd': this.stageDir})
-      await exec('git commit -m "Initial import."', {'cwd': this.stageDir})
       await exec(`git clone -b work ${this.currDir} ${this.prevDir}`)
     }
     // Handle new configuration files
