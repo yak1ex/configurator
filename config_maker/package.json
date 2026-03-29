@@ -4,6 +4,9 @@
   "description": "",
   "type": "module",
   "main": "config_maker.js",
+  "engines": {
+    "node": ">= 20.1.0"
+  },
   "dependencies": {
     "command-line-args": "^6.0.0",
     "command-line-usage": "^7.0.3",

@@ -54,7 +54,27 @@ class ConfigMaker {
 
   make_context () {
 
-    let make_counter = (init: number, minimum: number, pad: string) => new Counter(init, minimum, pad)
+    // context binder for Mustache. It allows to call methods of Counter class in Mustache templates without losing "this" context.
+    let make_counter = (init: number, minimum: number, pad: string) => new Proxy(
+      new Counter(init, minimum, pad),
+      {
+        get: function(obj, prop) {
+          if (typeof prop === 'symbol') return undefined
+          assertType(prop, isString, 'Access to counter properties by NOT string key')
+          if (prop in obj) {
+            const value = obj[prop as keyof Counter]
+            if (typeof value === 'function') {
+              return value.bind(obj)
+            } else {
+              return value
+            }
+          } else {
+            return undefined
+          }
+        },
+        set: function(obj, prop, value) { return false; }
+       }
+    )
     //{{counter}} {{counter.incr}}
     //{{counter.keep}}
     //{{#counter.set}}3{{/counter.set}}
@@ -87,6 +107,10 @@ class ConfigMaker {
   question (query: string, opt: { choice?: string[], default?: string }) {
     return new Promise<string>((resolve, reject) => {
       const option = { ...opt }
+      if (option.choice && option.choice.length === 0) {
+        reject(new Error('Choice list must not be empty'))
+        return
+      }
       if (option.default !== undefined && option.choice && !option.choice.includes(option.default)) {
         reject(new Error('Default value must be included in choice list'))
         return
