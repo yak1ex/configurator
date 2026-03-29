@@ -12,10 +12,7 @@ import { mapTuple, assertType, isString } from './type-utils.js'
 const exec = util.promisify(child_process.exec)
 
 class Counter {
-  private value: number
-  constructor (init: number, private minimum: number, private pad: string) {
-      this.value = init
-      this.minimum = minimum
+  constructor (private value: number, private minimum: number, private pad: string) {
       this.pad = pad !== undefined ? pad : '0';
   }
   keep () { let s = this.value.toString(); return this._pad(s) }
@@ -39,8 +36,6 @@ class ConfigMaker {
   private specs: Spec[] = []
 
   constructor(private inputDir: string, private tempDir: string) {
-    this.inputDir = inputDir
-    this.tempDir = tempDir
     ;[ this.currDir, this.prevDir, this.stageDir ] = mapTuple(['#curr', '#prev', '#stage'], elem => path.join(tempDir, elem))
     this.origContext = this.make_context()
   }
@@ -82,6 +77,10 @@ class ConfigMaker {
   question (query: string, opt: { choice?: string[], default?: string }) {
     return new Promise<string>((resolve, reject) => {
       const option = Object.assign({ choice: [] }, opt)
+      if (option.default !== undefined && !option.choice.includes(option.default)) {
+        reject(new Error('Default value must be included in choice list'))
+        return
+      }
       const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
       const cb = (answer: string) => {
         if(answer === '' && 'default' in option) answer = option.default
@@ -159,7 +158,7 @@ class ConfigMaker {
     return Promise.all(this.specs.map(async spec => {
       const outDir = path.join(this.currDir, spec.app)
       await fs.mkdirp(outDir)
-      return Promise.all(spec.files.map(async file => {
+      await Promise.all(spec.files.map(async file => {
         const encoding = this.getEncoding(file, spec.context)
         const buf = await fs.readFile(path.join(this.inputDir, spec.app, file))
         const decodedBuf = iconv.decode(buf, encoding.encoding)
@@ -167,7 +166,7 @@ class ConfigMaker {
         const encodedResult = iconv.encode(renderedBuf, encoding.encoding, { addBOM: encoding.bom })
         const outFile = path.join(outDir, file)
         await fs.ensureFile(outFile)
-        fs.writeFile(outFile, encodedResult)
+        await fs.writeFile(outFile, encodedResult)
       }))
     }))
   }
@@ -187,7 +186,10 @@ class ConfigMaker {
     try {
       return await fs.readFile(targetPath)
     } catch(e) {
-      return
+      if (e instanceof Error && 'code' in e && e.code === 'ENOENT') {
+        return
+      }
+      throw e
     }
   }
 

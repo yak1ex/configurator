@@ -22,4 +22,4 @@ export const isNumber  = (v: unknown): v is number  => typeof v === "number"
 export const isBigInt  = (v: unknown): v is bigint  => typeof v === "bigint"
 export const isBoolean = (v: unknown): v is boolean => typeof v === "boolean"
 export const isSymbol  = (v: unknown): v is symbol  => typeof v === "symbol"
-export const isObject  = (v: unknown): v is object  => typeof v === "object"
+export const isObject  = (v: unknown): v is object  => typeof v === "object" && v!== null
