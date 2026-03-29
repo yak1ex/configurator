@@ -36,7 +36,7 @@ class ConfigMaker {
   private specs: Spec[] = []
 
   constructor(private inputDir: string, private tempDir: string) {
-    ;[ this.currDir, this.prevDir, this.stageDir ] = mapTuple(['#curr', '#prev', '#stage'], elem => path.join(tempDir, elem))
+    ;[ this.currDir, this.prevDir, this.stageDir ] = mapTuple(['#curr', '#prev', '#stage'] as const, elem => path.join(tempDir, elem))
     this.origContext = this.make_context()
   }
 
@@ -54,10 +54,12 @@ class ConfigMaker {
     const errorMessage = 'Access to environment variables by NOT string key'
     let env = new Proxy({}, {
       get: function(obj, prop) {
+        if (typeof prop === 'symbol') return undefined
         assertType(prop, isString, errorMessage)
         return process.env[prop.toUpperCase()]
       },
       has: function(obj, prop) {
+        if (typeof prop === 'symbol') return false
         assertType(prop, isString, errorMessage)
         return prop.toUpperCase() in process.env
       },
@@ -76,15 +78,15 @@ class ConfigMaker {
 
   question (query: string, opt: { choice?: string[], default?: string }) {
     return new Promise<string>((resolve, reject) => {
-      const option = Object.assign({ choice: [] }, opt)
-      if (option.default !== undefined && !option.choice.includes(option.default)) {
+      const option = { ...opt }
+      if (option.default !== undefined && option.choice && !option.choice.includes(option.default)) {
         reject(new Error('Default value must be included in choice list'))
         return
       }
       const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
       const cb = (answer: string) => {
-        if(answer === '' && 'default' in option) answer = option.default
-        if(option.choice.includes(answer)) {
+        if(answer === '' && option.default !== undefined) answer = option.default
+        if(!option.choice || option.choice.includes(answer)) {
           rl.close()
           resolve(answer)
         } else {
@@ -111,7 +113,10 @@ class ConfigMaker {
       const context = vm.createContext(Object.assign({}, this.origContext))
       vm.runInContext(controlScript, context, { filename: controlFile, displayErrors: true })
       const app = path.basename(controlFile, '.js')
-      const files = await fs.readdir(path.join(this.inputDir, app), { 'encoding': 'utf8', 'recursive': true})
+      const files = await fs.readdir(
+        path.join(this.inputDir, app),
+        { 'encoding': 'utf8', 'recursive': true, withFileTypes: true }
+      ).then(elems => elems.filter(v => v.isFile()).map(v => v.name)  )
       return { app, context, files }
     }))
   }
