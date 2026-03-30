@@ -4,6 +4,9 @@
   "description": "",
   "type": "module",
   "main": "config_maker.js",
+  "engines": {
+    "node": ">= 20.1.0"
+  },
   "dependencies": {
     "command-line-args": "^6.0.0",
     "command-line-usage": "^7.0.3",
@@ -13,8 +16,18 @@
     "mustache": "^2.3.0"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tsc": "npx tsc"
   },
   "author": "yak_ex@mx.scn.tv",
-  "license": "Zlib"
+  "license": "Zlib",
+  "devDependencies": {
+    "@types/command-line-args": "^5.2.3",
+    "@types/command-line-usage": "^5.0.4",
+    "@types/fs-extra": "^11.0.4",
+    "@types/minimatch": "^5.1.2",
+    "@types/mustache": "^4.2.6",
+    "@types/node": "^25.5.0",
+    "typescript": "^5.9.3"
+  }
 }

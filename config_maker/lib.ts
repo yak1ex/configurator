@@ -7,54 +7,92 @@ import readline from 'node:readline'
 import iconv from 'iconv-lite'
 import Mustache from 'mustache'
 import minimatch from "minimatch"
+import { mapTuple, assertType, isString } from './type-utils.js'
 
 const exec = util.promisify(child_process.exec)
 
-const Counter = class {
-  constructor (init, minimum, pad) {
-      this.value = init
-      this.minimum = minimum
-      this.pad = pad !== undefined ? pad : '0';
-  }
+class Counter {
+  constructor (private value: number, private minimum: number, private pad: string = '0') {}
   keep () { let s = this.value.toString(); return this._pad(s) }
   incr () { let s = (this.value++).toString(); return this._pad(s) }
-  set () { return (text, render) => { this.value = parseInt(text) } }
-  _pad (s) { return s.length < this.minimum ? this.pad.repeat(this.minimum - s.length)+s : s; }
-  [Symbol.toPrimitive](hint) { if (hint === 'number') { return this.value++ } else { return this.incr() } }
+  set () {
+    return (text: string, render: any) => {
+      const next = Number.parseInt(text, 10)
+      if (Number.isNaN(next)) {
+        throw new TypeError(`Counter value must be a number, but got "${text}".`)
+      }
+      this.value = next
+    }
+  }
+  private _pad (s: string) { return s.length < this.minimum ? this.pad.repeat(this.minimum - s.length)+s : s; }
+  [Symbol.toPrimitive](hint: string) { if (hint === 'number') { return this.value++ } else { return this.incr() } }
 }
 
-const ConfigMaker = class {
-  constructor(inputDir, tempDir) {
-    this.inputDir = inputDir
-    this.tempDir = tempDir
-    ;[ this.currDir, this.prevDir, this.stageDir ] = ['#curr', '#prev', '#stage'].map(elem => path.join(tempDir, elem))
+type Spec = {
+  app: string,
+  context: vm.Context,
+  files: string[],
+}
+
+class ConfigMaker {
+  private currDir: string
+  private prevDir: string
+  private stageDir: string
+  private origContext: vm.Context
+  private specs: Spec[] = []
+
+  constructor(private inputDir: string, private tempDir: string) {
+    ;[ this.currDir, this.prevDir, this.stageDir ] = mapTuple(['#curr', '#prev', '#stage'] as const, elem => path.join(tempDir, elem))
     this.origContext = this.make_context()
+  }
+
+  get_specs () : readonly Spec[] {
+    return [...this.specs]
   }
 
   make_context () {
 
-    let make_counter = (init, minimum, pad) => new Proxy(new Counter(init, minimum, pad), {
-      get: function(obj, prop) {
-        if(obj.hasOwnProperty(prop) && typeof obj[prop] === 'function') {
-          return function (s) { // Here, 'this' might be used as context
-            return obj[prop].call(obj, s)
+    // context binder for Mustache. It allows to call methods of Counter class in Mustache templates without losing "this" context.
+    let make_counter = (init: number, minimum: number, pad: string) => new Proxy(
+      new Counter(init, minimum, pad),
+      {
+        get: function(obj, prop) {
+          if (typeof prop === 'symbol') return undefined
+          assertType(prop, isString, 'Access to counter properties by NOT string key')
+          if (prop in obj) {
+            const value = obj[prop as keyof Counter]
+            if (typeof value === 'function') {
+              return value.bind(obj)
+            } else {
+              return value
+            }
+          } else {
+            return undefined
           }
-        } else return obj[prop]
-      }
-    })
+        },
+        set: function(obj, prop, value) { return false; }
+       }
+    )
     //{{counter}} {{counter.incr}}
     //{{counter.keep}}
     //{{#counter.set}}3{{/counter.set}}
 
+    const errorMessage = 'Access to environment variables by NOT string key'
     let env = new Proxy({}, {
       get: function(obj, prop) {
-        return typeof prop === 'string' ? process.env[prop.toUpperCase()] : obj[prop]
+        if (typeof prop === 'symbol') return undefined
+        assertType(prop, isString, errorMessage)
+        return process.env[prop.toUpperCase()]
       },
-      has: function(obj, prop) { return typeof prop === 'string' ? prop.toUpperCase() in process.env : prop in obj },
+      has: function(obj, prop) {
+        if (typeof prop === 'symbol') return false
+        assertType(prop, isString, errorMessage)
+        return prop.toUpperCase() in process.env
+      },
       set: function(obj, prop, value) { return false; }
     })
 
-    let is_office = process.env['USERDOMAIN'] === 'DNJP'
+    let is_office: boolean = process.env['USERDOMAIN'] === 'DNJP'
 
     // FIXME: pf32, pf64
 
@@ -64,22 +102,34 @@ const ConfigMaker = class {
     return context_base
   }
 
-  question = (query, opt) => new Promise((resolve, reject) => {
-    const option = Object.assign({ choice: [] }, opt)
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
-    const cb = (answer) => {
-      if(answer === '' && 'default' in option) answer = option.default
-      if(option.choice.includes(answer)) {
-        rl.close()
-        resolve(answer)
-      } else {
-        rl.question(query, cb)
+  question (query: string, opt: { choice?: string[], default?: string }) {
+    return new Promise<string>((resolve, reject) => {
+      const option = { ...opt }
+      if (option.choice && option.choice.length === 0) {
+        reject(new Error('Choice list must not be empty'))
+        return
       }
-    }
-    rl.question(query, cb)
-  })
+      if (option.default !== undefined && option.choice && !option.choice.includes(option.default)) {
+        reject(new Error('Default value must be included in choice list'))
+        return
+      }
+      const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
+      const cb = (answer: string) => {
+        if(answer === '' && option.default !== undefined) answer = option.default
+        if(!option.choice || option.choice.includes(answer)) {
+          rl.close()
+          resolve(answer)
+        } else {
+          rl.question(query, cb)
+        }
+      }
+      rl.question(query, cb)
+    })
+  }
 
-  match = (filename, choice, defval) => {
+  match (filename: string, choice: [string,string][]|undefined) : string | undefined
+  match (filename: string, choice: [string,string][]|undefined, defval: string) : string
+  match (filename: string, choice: [string,string][]|undefined, defval?: string) {
     if (!choice) return defval
     const ret = choice.find(e => minimatch(filename, e[0]))
     return (ret !== undefined) ? ret[1] : defval
@@ -89,11 +139,23 @@ const ConfigMaker = class {
   {
     const controlFiles = await fs.readdir(this.inputDir).then(elems => elems.filter(v => v.match(/\.js$/)))
     this.specs = await Promise.all(controlFiles.map(async controlFile => {
-      const controlScript = await fs.readFile(path.join(this.inputDir, controlFile))
+      const controlScript = await fs.readFile(path.join(this.inputDir, controlFile), 'utf-8')
       const context = vm.createContext(Object.assign({}, this.origContext))
       vm.runInContext(controlScript, context, { filename: controlFile, displayErrors: true })
       const app = path.basename(controlFile, '.js')
-      const files = await fs.readdir(path.join(this.inputDir, app), {'recursive': true})
+      const appDir = path.join(this.inputDir, app)
+      const files = await fs.readdir(
+        appDir,
+        { 'encoding': 'utf8', 'recursive': true }
+      ).then(async (entries) => {
+        const checks = await Promise.all(
+          (entries as string[]).map(async (relPath) => ({
+            relPath,
+            stat: await fs.stat(path.join(appDir, relPath)),
+          }))
+        )
+        return checks.filter(({ stat }) => stat.isFile()).map(({ relPath }) => relPath)
+      })
       return { app, context, files }
     }))
   }
@@ -125,7 +187,7 @@ const ConfigMaker = class {
     await exec(`git diff-index --quiet HEAD || git commit -m "${message}."`, {'cwd': this.stageDir})
   }
 
-  getEncoding(file, context) {
+  getEncoding(file: string, context: { encoding?: [string,string][] }) : { encoding: string, bom: boolean } {
     const encoding = this.match(file, context.encoding, 'sjis')
     if (encoding === 'utf8-bom') {
       return { encoding: 'utf8', bom: true }
@@ -138,7 +200,7 @@ const ConfigMaker = class {
     return Promise.all(this.specs.map(async spec => {
       const outDir = path.join(this.currDir, spec.app)
       await fs.mkdirp(outDir)
-      return Promise.all(spec.files.map(async file => {
+      await Promise.all(spec.files.map(async file => {
         const encoding = this.getEncoding(file, spec.context)
         const buf = await fs.readFile(path.join(this.inputDir, spec.app, file))
         const decodedBuf = iconv.decode(buf, encoding.encoding)
@@ -146,7 +208,7 @@ const ConfigMaker = class {
         const encodedResult = iconv.encode(renderedBuf, encoding.encoding, { addBOM: encoding.bom })
         const outFile = path.join(outDir, file)
         await fs.ensureFile(outFile)
-        fs.writeFile(outFile, encodedResult)
+        await fs.writeFile(outFile, encodedResult)
       }))
     }))
   }
@@ -162,11 +224,14 @@ const ConfigMaker = class {
     await exec(`git checkout ${hash}`, {'cwd': this.prevDir})
   }
 
-  async getContent(targetPath) {
+  async getContent(targetPath: string) {
     try {
       return await fs.readFile(targetPath)
     } catch(e) {
-      return
+      if (e instanceof Error && 'code' in e && e.code === 'ENOENT') {
+        return
+      }
+      throw e
     }
   }
 
