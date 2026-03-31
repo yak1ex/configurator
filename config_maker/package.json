@@ -16,8 +16,8 @@
     "mustache": "^2.3.0"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "tsc": "npx tsc"
+    "test": "vitest",
+    "tsc": "tsc"
   },
   "author": "yak_ex@mx.scn.tv",
   "license": "Zlib",
@@ -28,6 +28,7 @@
     "@types/minimatch": "^5.1.2",
     "@types/mustache": "^4.2.6",
     "@types/node": "^25.5.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.2"
   }
 }

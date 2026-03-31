@@ -37,5 +37,10 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
-  }
+  },
+  "files": [
+    "config_maker.ts",
+    "lib.ts",
+    "type-utils.ts"
+  ]
 }
