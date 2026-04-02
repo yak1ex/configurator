@@ -12,7 +12,12 @@ import { mapTuple, assertType, isString } from './type-utils.js'
 const exec = util.promisify(child_process.exec)
 
 export class Counter {
-  constructor (private value: number, private minimum: number, private pad: string = '0') {}
+  constructor (private value: number, private minimum: number, private pad: string = '0') {
+    // bind this for Mustache. It allows to call methods of Counter class in Mustache templates without losing "this" context.
+    this.keep = this.keep.bind(this)
+    this.incr = this.incr.bind(this)
+    this.set = this.set.bind(this)
+  }
   keep () { let s = this.value.toString(); return this._pad(s) }
   incr () { let s = (this.value++).toString(); return this._pad(s) }
   set () {
@@ -52,41 +57,18 @@ export class ConfigMaker {
 
   make_context () {
 
-    // context binder for Mustache. It allows to call methods of Counter class in Mustache templates without losing "this" context.
-    let make_counter = (init: number, minimum: number, pad: string) => new Proxy(
-      new Counter(init, minimum, pad),
-      {
-        get: function(obj, prop) {
-          if (typeof prop === 'symbol') return undefined
-          assertType(prop, isString, 'Access to counter properties by NOT string key')
-          if (prop in obj) {
-            const value = obj[prop as keyof Counter]
-            if (typeof value === 'function') {
-              return value.bind(obj)
-            } else {
-              return value
-            }
-          } else {
-            return undefined
-          }
-        },
-        set: function(obj, prop, value) { return false; }
-       }
-    )
+    let make_counter = (init: number, minimum: number, pad: string) => new Counter(init, minimum, pad)
     //{{counter}} {{counter.incr}}
     //{{counter.keep}}
     //{{#counter.set}}3{{/counter.set}}
 
-    const errorMessage = 'Access to environment variables by NOT string key'
     let env = new Proxy({}, {
       get: function(obj, prop) {
         if (typeof prop === 'symbol') return undefined
-        assertType(prop, isString, errorMessage)
         return process.env[prop.toUpperCase()]
       },
       has: function(obj, prop) {
         if (typeof prop === 'symbol') return false
-        assertType(prop, isString, errorMessage)
         return prop.toUpperCase() in process.env
       },
       set: function(obj, prop, value) { return false; }
