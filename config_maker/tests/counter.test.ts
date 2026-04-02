@@ -67,6 +67,11 @@ describe('plain Counter', () => {
         expect(counter1.keep()).toBe("10")
         expect(counter2.keep()).toBe("20")
     })
+    test('invalid set', () => {
+        const counter = new Counter(2, 0)
+        expect(() => counter.set()("abc", undefined)).toThrow('Counter value must be a number, but got "abc"')
+        expect(counter.keep()).toBe("2")
+    })
 })
 
 describe('Counter with Mustache', () => {
@@ -86,11 +91,18 @@ describe('Counter with Mustache', () => {
         const { make_counter } = (new ConfigMaker('', '')).make_context()
         expect(Mustache.render('{{counter}}{{#counter.set}}3{{/counter.set}}{{counter}}{{counter}}', { counter: make_counter(0, 4, '0') })).toBe('000000030004')
     })
-    test('pararllel', () => {
+    test('parallel', () => {
         const { make_counter } = (new ConfigMaker('', '')).make_context()
         expect(
             Mustache.render('{{counter1}}{{counter2}}{{counter2}}{{counter1}}',
             { counter1: make_counter(0, 4, '0'), counter2: make_counter(5, 4, '0') })
         ).toBe('0000000500060001')
+    })
+    test('invalid set', () => {
+        const { make_counter } = (new ConfigMaker('', '')).make_context()
+        expect(() => Mustache.render(
+            '{{counter}}{{#counter.set}}abc{{/counter.set}}{{counter}}{{counter}}',
+            { counter: make_counter(0, 4, '0') })
+        ).toThrow('Counter value must be a number, but got "abc"')
     })
 })

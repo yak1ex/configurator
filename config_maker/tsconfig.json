@@ -38,7 +38,7 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
   },
-  "files": [
+  "include": [
     "config_maker.ts",
     "lib.ts",
     "type-utils.ts"
