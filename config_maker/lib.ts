@@ -11,7 +11,7 @@ import { mapTuple, assertType, isString } from './type-utils.js'
 
 const exec = util.promisify(child_process.exec)
 
-class Counter {
+export class Counter {
   constructor (private value: number, private minimum: number, private pad: string = '0') {}
   keep () { let s = this.value.toString(); return this._pad(s) }
   incr () { let s = (this.value++).toString(); return this._pad(s) }
@@ -34,7 +34,7 @@ type Spec = {
   files: string[],
 }
 
-class ConfigMaker {
+export class ConfigMaker {
   private currDir: string
   private prevDir: string
   private stageDir: string
