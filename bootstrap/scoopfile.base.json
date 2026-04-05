@@ -130,6 +130,16 @@
     },
     {
       "Info": "",
+      "Source": "main",
+      "Name": "psmux"
+    },
+    {
+      "Info": "",
+      "Source": "main",
+      "Name": "psmux"
+    },
+    {
+      "Info": "",
       "Source": "extras",
       "Name": "powertoys"
     },
