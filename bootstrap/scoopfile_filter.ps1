@@ -12,7 +12,11 @@
   scoop export | .\scoopfile_filter.ps1
 #>
 
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments")] # Preference variable
+param(
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '',
+        Justification = 'Preference variable for PowerShell 7.3+ compatibility')]
+    [Parameter()] $null
+)
 $PSNativeCommandArgumentPassing = 'Legacy' # Compatibility between PS versions
 $jqcmd = 
 # check if no versions are explicitly specified
