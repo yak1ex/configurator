@@ -135,13 +135,13 @@
     },
     {
       "Info": "",
-      "Source": "main",
-      "Name": "psmux"
+      "Source": "extras",
+      "Name": "powertoys"
     },
     {
       "Info": "",
-      "Source": "extras",
-      "Name": "powertoys"
+      "Source": "main",
+      "Name": "pwsh"
     },
     {
       "Info": "",
