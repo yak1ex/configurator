@@ -14,10 +14,10 @@
 
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
   'PSUseDeclaredVarsMoreThanAssignments',
-  'PSNativeCommandArgumentPassing',
-  Justification = 'Preference variable for PowerShell 7.3+ compatibility')]
+  '',
+  Justification = 'Preference variable: PSNativeCommandArgumentPassing for PowerShell 7.3+ compatibility')]
 param()
-$PSNativeCommandArgumentPassing = 'Legacy' # Compatibility between PS versions
+$PSNativeCommandArgumentPassing = 'Legacy' # Compatibility between PS versions for '\"\"' quoting
 
 $jqcmd = 
 # check if no versions are explicitly specified
