@@ -156,20 +156,15 @@ export class ConfigMaker {
     // Handle new configuration files
     const message = isInit ? "Initial import." : `Add empty placeholders on ${(new Date()).toLocaleString()}.`
     await Promise.all(this.specs.map(spec =>
-      Promise.all(spec.files.map(file => {
+      Promise.all(spec.files.map(async file => {
           const instDir = this.match(file, spec.context.install)
-          if(instDir) {
-            const target_file = path.join(instDir, file)
-            const link_dir = path.join(this.stageDir, spec.app)
-            return (async () => {
-              await fs.ensureFile(target_file)
-              await fs.ensureDir(link_dir)
-              await fs.ensureLink(target_file, path.join(link_dir, file))
-            })()
-          }
-        }
-      )))
-    )
+          if (!instDir) return
+          const targetFile = path.join(instDir, file)
+          const destPath = path.join(this.stageDir, spec.app, file)
+          await fs.ensureFile(targetFile)
+          await fs.ensureLink(targetFile, destPath)
+      }))
+    ))
     await exec('git add .', {'cwd': this.stageDir})
     await exec(`git diff-index --quiet HEAD || git commit -m "${message}."`, {'cwd': this.stageDir})
   }
