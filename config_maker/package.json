@@ -17,7 +17,7 @@
   },
   "scripts": {
     "test": "npx tsc --project ./tsconfig.test.json && npx vitest run",
-    "tsc": "tsc"
+    "build": "tsc"
   },
   "author": "yak_ex@mx.scn.tv",
   "license": "Zlib",
