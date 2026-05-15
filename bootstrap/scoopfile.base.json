@@ -180,6 +180,9 @@
     "  \"`\"LongPathsEnabled`\"=dword:00000001\" | Out-File $reg -Append",
     "  Start-Process -Wait $reg",
     "  Remove-Item $reg",
+    "}",
+    "if(-not (Test-Path -Path $env:USERPROFILE\\Documents\\PowerShell)) {",
+    "  New-Item -Type Junction -Target $env:USERPROFILE\\Documents\\WindowsPowerShell -Path $env:USERPROFILE\\Documents\\PowerShell",
     "}"
   ],
   "post_install": [
