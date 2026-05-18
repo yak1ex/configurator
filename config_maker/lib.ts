@@ -33,10 +33,10 @@ export class Counter {
   [Symbol.toPrimitive](hint: string) { if (hint === 'number') { return this.value++ } else { return this.incr() } }
 }
 
-type Spec = {
-  app: string,
-  context: vm.Context,
-  files: string[],
+interface Spec {
+  app: string
+  context: vm.Context
+  files: string[]
 }
 
 export class ConfigMaker {
