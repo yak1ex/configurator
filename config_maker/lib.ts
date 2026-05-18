@@ -39,6 +39,10 @@ interface Spec {
   files: string[]
 }
 
+interface Feature {
+  office: boolean
+}
+
 export class ConfigMaker {
   private currDir: string
   private prevDir: string
@@ -74,12 +78,14 @@ export class ConfigMaker {
       set: function(obj, prop, value) { return false; }
     })
 
-    let is_office: boolean = process.env['USERDOMAIN'] === 'DNJP'
+    let feature : Feature = {
+      office: process.env['USERDOMAIN'] === 'DNJP'
+    }
 
     // FIXME: pf32, pf64
 
     let context_base = {
-      make_counter, env, is_office, pf32: 'c:\\Program Files'
+      make_counter, env, feature, pf32: 'c:\\Program Files'
     };
     return context_base
   }
