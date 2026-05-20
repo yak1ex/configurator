@@ -82,10 +82,8 @@ export class ConfigMaker {
       office: process.env['USERDOMAIN'] === 'DNJP'
     })
 
-    // FIXME: pf32, pf64
-
     let context_base = {
-      make_counter, env, feature, pf32: 'c:\\Program Files'
+      make_counter, env, feature
     };
     return context_base
   }
