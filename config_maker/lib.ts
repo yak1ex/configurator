@@ -78,9 +78,9 @@ export class ConfigMaker {
       set: function(obj, prop, value) { return false; }
     })
 
-    let feature : Feature = {
+    let feature : Feature = Object.freeze<Feature>({
       office: process.env['USERDOMAIN'] === 'DNJP'
-    }
+    })
 
     // FIXME: pf32, pf64
 
