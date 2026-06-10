@@ -106,12 +106,12 @@
     {
       "Info": "",
       "Source": "extras",
-      "Name": "mambaforge"
+      "Name": "manictime"
     },
     {
       "Info": "",
       "Source": "extras",
-      "Name": "manictime"
+      "Name": "miniforge3"
     },
     {
       "Info": "",
@@ -170,7 +170,7 @@
     }
   ],
   "pre_install": [
-    "# for mambaforge, enable long paths, if necessary ",
+    "# for miniforge3, enable long paths, if necessary ",
     "if (-not (Get-ItemProperty -Path registry::HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem).LongPathsEnabled) {",
     "  $temp = New-TemporaryFile",
     "  $reg = $temp.FullName -replace '.tmp$', '.reg'",
