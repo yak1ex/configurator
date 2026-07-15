@@ -3,9 +3,18 @@
     {
       "Name": "main",
       "Source": "https://github.com/ScoopInstaller/Main"
+    },
+    {
+      "Name": "yak1ex",
+      "Source": "https://github.com/yak1ex/scoop-bucket"
     }
   ],
   "apps": [
+    {
+      "Info": "",
+      "Source": "yak1ex",
+      "Name": "privoxy-enhanced"
+    },
     {
       "Info": "",
       "Source": "main",

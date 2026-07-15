@@ -65,6 +65,11 @@
     },
     {
       "Info": "",
+      "Source": "extras",
+      "Name": "everything"
+    },
+    {
+      "Info": "",
       "Source": "yak1ex",
       "Name": "firefilecopy"
     },
@@ -102,6 +107,11 @@
       "Info": "",
       "Source": "main",
       "Name": "jq"
+    },
+    {
+      "Info": "",
+      "Source": "yak1ex",
+      "Name": "keyswap"
     },
     {
       "Info": "",
@@ -152,6 +162,11 @@
       "Info": "",
       "Source": "extras",
       "Name": "sysinternals"
+    },
+    {
+      "Info": "",
+      "Source": "main",
+      "Name": "uv"
     },
     {
       "Info": "",
