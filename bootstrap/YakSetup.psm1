@@ -690,11 +690,16 @@ function Update-PSWTP_
    .Description
     A command for internal use to update pwsh and windows-terminal-preview
     This command is not intended to call by user
-
   #>
-  $id=(Get-Process WindowsTerminal | Where-Object { $_.Path -match "preview" }).Id
-  Stop-Process $id
-  Wait-Process $id
+  $id = @(
+    Get-Process -Name WindowsTerminal -ErrorAction SilentlyContinue |
+      Where-Object { $_.Path -match 'preview' } |
+      Select-Object -ExpandProperty Id
+  )
+  if ($id) {
+    Stop-Process -Id $id -ErrorAction Stop
+    Wait-Process -Id $id
+  }
   scoop update pwsh windows-terminal-preview
   &"$(scoop prefix windows-terminal-preview)\WindowsTerminal.exe"
 }
