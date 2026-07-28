@@ -718,5 +718,5 @@ function Update-PSWTP
     Update-PSWTP
   #>
   # In order to update windows-terminal-preview and pwsh, we need to run a standard windows terminal and windows powershell,
-  &"$($env:LOCALAPPDATA)\Microsoft\WindowsApps\Microsoft.WindowsTerminal_8wekyb3d8bbwe\wt.exe" 'powershell' -Command  'Update-PSWTP_'
+  &"$($env:LOCALAPPDATA)\Microsoft\WindowsApps\Microsoft.WindowsTerminal_8wekyb3d8bbwe\wt.exe" 'powershell' -Command  'Import-Module YakSetup; Update-PSWTP_'
 }
