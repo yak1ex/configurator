@@ -680,3 +680,36 @@ function Send-MagicPacket
   $UdpClient.Send($MagicPacket, $MagicPacket.Length) | Out-Null
   $UdpClient.Close()
 }
+
+function Update-PSWTP_
+{
+  <#
+   .Synopsis
+    A command for internal use to update pwsh and windows-terminal-preview
+
+   .Description
+    A command for internal use to update pwsh and windows-terminal-preview
+    This command is not intended to call by user
+
+  #>
+  $id=(Get-Process WindowsTerminal | Where-Object { $_.Path -match "preview" }).Id
+  Stop-Process $id
+  Wait-Process $id
+  scoop update *
+  &"$(scoop prefix windows-terminal-preview)\WindowsTerminal.exe"
+}
+
+function Update-PSWTP
+{
+  <#
+   .Synopsis
+    Update PWSH and windows-terminal-preview even in working
+
+   .Description
+    Update PWSH and windows-terminal-preview even in working
+
+   .Example
+    Update-PSWTP
+  #>
+  &"$($env:LOCALAPPDATA)\Microsoft\WindowsApps\Microsoft.WindowsTerminal_8wekyb3d8bbwe\wt.exe" 'powershell' -Command  'Update-PSWTP_'
+}
