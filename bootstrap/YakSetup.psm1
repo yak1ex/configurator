@@ -695,7 +695,7 @@ function Update-PSWTP_
   $id=(Get-Process WindowsTerminal | Where-Object { $_.Path -match "preview" }).Id
   Stop-Process $id
   Wait-Process $id
-  scoop update *
+  scoop update pwsh windows-terminal-preview
   &"$(scoop prefix windows-terminal-preview)\WindowsTerminal.exe"
 }
 
