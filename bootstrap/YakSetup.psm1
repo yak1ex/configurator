@@ -691,6 +691,11 @@ function Update-PSWTP_
     A command for internal use to update pwsh and windows-terminal-preview
     This command is not intended to call by user
   #>
+  $settings = Get-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
+  If ($settings.AutoConfigURL -match 'localhost') {
+    # Local proxy configured environment
+    Read-Host 'After proxy is configured, press Enter to continue'
+  }
   $id = @(
     Get-Process -Name WindowsTerminal -ErrorAction SilentlyContinue |
       Where-Object { $_.Path -match 'preview' } |
@@ -718,5 +723,5 @@ function Update-PSWTP
     Update-PSWTP
   #>
   # In order to update windows-terminal-preview and pwsh, we need to run a standard windows terminal and windows powershell,
-  &"$($env:LOCALAPPDATA)\Microsoft\WindowsApps\Microsoft.WindowsTerminal_8wekyb3d8bbwe\wt.exe" 'powershell' -Command  'Import-Module YakSetup; Update-PSWTP_'
+  &"$($env:LOCALAPPDATA)\Microsoft\WindowsApps\Microsoft.WindowsTerminal_8wekyb3d8bbwe\wt.exe" 'powershell' -Command  'Import-Module YakSetup\; Update-PSWTP_'
 }
