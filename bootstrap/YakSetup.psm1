@@ -691,6 +691,11 @@ function Update-PSWTP_
     A command for internal use to update pwsh and windows-terminal-preview
     This command is not intended to call by user
   #>
+  $settings = Get-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
+  If ($settings.AutoConfigURL -match 'localhost') {
+    # Local proxy configured environment
+    Read-Host 'After proxy is configured, press Enter to continue'
+  }
   $id = @(
     Get-Process -Name WindowsTerminal -ErrorAction SilentlyContinue |
       Where-Object { $_.Path -match 'preview' } |
