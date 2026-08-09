@@ -722,6 +722,14 @@ function Update-PSWTP
    .Example
     Update-PSWTP
   #>
-  # In order to update windows-terminal-preview and pwsh, we need to run a standard windows terminal and windows powershell,
-  &"$($env:LOCALAPPDATA)\Microsoft\WindowsApps\Microsoft.WindowsTerminal_8wekyb3d8bbwe\wt.exe" 'powershell' -Command  'Import-Module YakSetup\; Update-PSWTP_'
+  # We need explict PSModulePath adjustment because PS5 is invoked via `wt.exe`
+  # See https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_psmodulepath?view=powershell-7.6#starting-windows-powershell-from-powershell-7
+  $oldPSModulePath = $env:PSModulePath
+  try {
+    $env:PSModulePath = $env:WinPSModulePath
+    # In order to update windows-terminal-preview and pwsh, we need to run a standard windows terminal and windows powershell,
+    &"$($env:LOCALAPPDATA)\Microsoft\WindowsApps\Microsoft.WindowsTerminal_8wekyb3d8bbwe\wt.exe" 'powershell' -Command  'Import-Module YakSetup\; Update-PSWTP_'
+  } finally {
+    $env:PSModulePath = $oldPSModulePath
+  }
 }
