@@ -6,7 +6,7 @@ import vm from 'node:vm'
 import readline from 'node:readline'
 import iconv from 'iconv-lite'
 import Mustache from 'mustache'
-import minimatch from "minimatch"
+import { minimatch } from 'minimatch'
 import { mapTuple, assertType, isString } from './type-utils.js'
 
 const exec = util.promisify(child_process.exec)
