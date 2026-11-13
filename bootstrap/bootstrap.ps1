@@ -49,6 +49,7 @@ function main {
 
   $pre_update  = @{}
   $post_update = @{}
+  $previledged = @{}
 
   ######################################################################
   # Import by scoopfiles
@@ -90,6 +91,9 @@ function main {
       if ($null -ne $json.post_update) {
         $json.post_update.psobject.properties | ForEach-Object { $post_update[$_.Name] = $_.Value }
       }
+      if ($null -ne $json.previledged) {
+        $json.previledged | ForEach-Object { $previledged[$_] = 1 }
+      }
     }
   }
 
@@ -100,14 +104,20 @@ function main {
     $targets = scoop status 6>$null | Where-Object { $_.Info -notmatch "Held" }
     # targets having scripts
     $targets | Where-Object {
-      $null -ne $pre_update[$_.Name] -or $null -ne $post_update[$_.Name]
+      $null -ne $pre_update[$_.Name]
+      -or $null -ne $post_update[$_.Name]
+      -or $null -ne $previledged[$_.Name]
     } | ForEach-Object {
       scoop download $_.Name
       if ($null -ne $pre_update[$_.Name]) {
         Write-Host "Running pre_update script..."
         Invoke-Command ([scriptblock]::Create($pre_update[$_.Name] -join "`r`n"))
       }
-      scoop update $_.Name
+      if ($null -ne $previledged[$_.Name]) {
+        Invoke-Elevated -ScriptBlock { scoop update $Args[0] } $_.Name
+      } else {
+        scoop update $_.Name
+      }
       if ($null -ne $post_update[$_.Name]) {
         Write-Host "Running post_update script..."
         Invoke-Command ([scriptblock]::Create($post_update[$_.Name] -join "`r`n"))
