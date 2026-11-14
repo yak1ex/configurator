@@ -1,0 +1,34 @@
+{
+  "buckets": [
+    {
+      "Name": "extras",
+      "Source": "https://github.com/ScoopInstaller/Extras"
+    }
+  ],
+  "apps": [
+    {
+      "Info": "",
+      "Source": "extras",
+      "Name": "tailscale"
+    }
+  ],
+  "pre_install": [
+    "# installing tailscale requires privilege escalation, so this is actual installation step, not just a pre-install",
+    "Invoke-Elevated -Wait -ScriptBlock { scoop install tailscale }"
+  ],
+  "pre_update": {
+    "tailscale": [
+        "Invoke-Elevated -Wait -ScriptBlock { sc.exe stop Tailscale }",
+        "Stop-Process -Name tailscale-ipn -Force -ErrorAction SilentlyContinue"
+    ]
+  },
+  "previledged": [
+    "tailscale"
+  ],
+  "post_update": {
+    "tailscale": [
+        "Invoke-Elevated -Wait -ScriptBlock { sc.exe start Tailscale }",
+        "tailscale-ipn"
+    ]
+  }
+}
