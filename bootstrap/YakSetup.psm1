@@ -552,6 +552,9 @@ function Invoke-Elevated
    .Parameter NoExit
     Boolean. New PowerShell session is not exited if specified.
 
+   .Parameter Wait
+    Boolean. Wait for the elevated PowerShell process to exit if specified.
+
    .Parameter ScriptBlock
     ScriptBlock. A script block invoked with administrator right.
 
@@ -563,14 +566,26 @@ function Invoke-Elevated
 
    .Example
     Invoke-Elevated -NoExit -ScriptBlock { Write-Host $Args[1],$Args[0] } 'arg1','arg2'
+
+   .Example
+    Invoke-Elevated -Wait -ScriptBlock { scoop update git }
   #>
   param(
     [switch]$NoExit,
+    [switch]$Wait,
     [Parameter(Mandatory=$true)][scriptblock]$ScriptBlock,
     [String[]]$Args
   )
-  $sh = new-object -com 'Shell.Application'
-  $sh.ShellExecute('powershell', "$(if ($NoExit) {'-NoExit '})-Command `$Args=@($(($Args | %{''''+$_+''''}) -join ',')); $ScriptBlock", '', 'runas')
+
+  $psArgsLiteral = (($Args | ForEach-Object { "'$($_ -replace "'", "''")'" }) -join ',')
+  $command = "`$Args=@($psArgsLiteral); $ScriptBlock"
+  $argumentList = @()
+  if ($NoExit) {
+    $argumentList += '-NoExit'
+  }
+  $argumentList += @('-Command', $command)
+
+  Start-Process -FilePath 'powershell' -Verb RunAs -ArgumentList $argumentList -Wait:$Wait
 }
 
 function Compress-ProcessMitigation
