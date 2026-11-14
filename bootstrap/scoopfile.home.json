@@ -14,23 +14,12 @@
   ],
   "pre_install": [
     "# installing tailscale requires privilege escalation, so this is actual installation step, not just a pre-install",
-    "Invoke-Elevated { scoop install tailscale }"
+    "Invoke-Elevated -Wait -ScriptBlock { scoop install tailscale }"
   ],
   "pre_update": {
     "tailscale": [
-        "Invoke-Elevated { sc.exe stop Tailscale }",
-        "Stop-Process -Name tailscale-ipn -Force -ErrorAction SilentlyContinue",
-        "# wait for the service to stop",
-        "for ($i = 0; $i -lt 10; $i++) {",
-        "    $svc = Get-Service -Name 'Tailscale' -ErrorAction Stop",
-        "    if ($svc.Status -eq 'Stopped') {",
-        "        break",
-        "    }",
-        "    Start-Sleep -Milliseconds 500",
-        "}",
-        "if ($svc.Status -ne 'Stopped') {",
-        "    throw \"Timeout: Tailscale service did not stop within $maxWaitLoops loops.\"",
-        "}"
+        "Invoke-Elevated -Wait -ScriptBlock { sc.exe stop Tailscale }",
+        "Stop-Process -Name tailscale-ipn -Force -ErrorAction SilentlyContinue"
     ]
   },
   "previledged": [
@@ -38,7 +27,7 @@
   ],
   "post_update": {
     "tailscale": [
-        "Invoke-Elevated { sc.exe start Tailscale }",
+        "Invoke-Elevated -Wait -ScriptBlock { sc.exe start Tailscale }",
         "tailscale-ipn"
     ]
   }
