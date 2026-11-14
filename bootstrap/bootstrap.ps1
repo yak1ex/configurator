@@ -104,9 +104,9 @@ function main {
     $targets = scoop status 6>$null | Where-Object { $_.Info -notmatch "Held" }
     # targets having scripts
     $targets | Where-Object {
-      $null -ne $pre_update[$_.Name]
-      -or $null -ne $post_update[$_.Name]
-      -or $null -ne $previledged[$_.Name]
+      $null -ne $pre_update[$_.Name] -or
+      $null -ne $post_update[$_.Name] -or
+      $null -ne $previledged[$_.Name]
     } | ForEach-Object {
       scoop download $_.Name
       if ($null -ne $pre_update[$_.Name]) {
