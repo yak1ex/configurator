@@ -18,7 +18,7 @@
   ],
   "pre_update": {
     "tailscale": [
-        "Invoke-Elevated -Wait -ScriptBlock { sc.exe stop Tailscale }",
+        "Invoke-Elevated -Wait -ScriptBlock { net stop Tailscale }",
         "Stop-Process -Name tailscale-ipn -Force -ErrorAction SilentlyContinue"
     ]
   },
@@ -27,7 +27,7 @@
   ],
   "post_update": {
     "tailscale": [
-        "Invoke-Elevated -Wait -ScriptBlock { sc.exe start Tailscale }",
+        "Invoke-Elevated -Wait -ScriptBlock { net start Tailscale }",
         "tailscale-ipn"
     ]
   }
