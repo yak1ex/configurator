@@ -105,6 +105,10 @@ function main {
     # first update yaksetup if it is in the list of targets
     $targets | Where-Object { $_.Name -eq 'yaksetup' } | ForEach-Object {
       scoop update $_.Name
+      if ($null -ne (Get-Module -Name $_.Name)) {
+        Remove-Module $_.Name
+      }
+      Import-Module $_.Name
     }
     # targets having scripts
     $targets | Where-Object {
