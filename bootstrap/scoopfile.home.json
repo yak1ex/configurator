@@ -27,7 +27,7 @@
   ],
   "pre_update": {
     "opencode": [
-        "opencode server stop"
+        "opencode service stop"
     ],
     "tailscale": [
         "Invoke-Elevated -Wait -ScriptBlock { net stop Tailscale }",
