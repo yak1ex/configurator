@@ -102,6 +102,14 @@ function main {
   if ($options.Update) {
     scoop update
     $targets = scoop status 6>$null | Where-Object { $_.Info -notmatch "Held" }
+    # first update yaksetup if it is in the list of targets
+    $targets | Where-Object { $_.Name -eq 'yaksetup' } | ForEach-Object {
+      scoop update $_.Name
+      if ($null -ne (Get-Module -Name $_.Name)) {
+        Remove-Module $_.Name
+      }
+      Import-Module $_.Name
+    }
     # targets having scripts
     $targets | Where-Object {
       $null -ne $pre_update[$_.Name] -or
