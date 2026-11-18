@@ -3,9 +3,18 @@
     {
       "Name": "extras",
       "Source": "https://github.com/ScoopInstaller/Extras"
+    },
+    {
+      "Name": "main",
+      "Source": "https://github.com/ScoopInstaller/Main"
     }
   ],
   "apps": [
+    {
+      "Info": "",
+      "Source": "main",
+      "Name": "opencode"
+    },
     {
       "Info": "",
       "Source": "extras",
@@ -17,6 +26,9 @@
     "Invoke-Elevated -Wait -ScriptBlock { scoop install tailscale }"
   ],
   "pre_update": {
+    "opencode": [
+        "opencode service stop"
+    ],
     "tailscale": [
         "Invoke-Elevated -Wait -ScriptBlock { net stop Tailscale }",
         "Stop-Process -Name tailscale-ipn -Force -ErrorAction SilentlyContinue"
